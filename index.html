@@ -151,6 +151,24 @@ h2 { font-size: 27px; line-height: 1.15; text-shadow: 3px 3px 0 var(--ink); }
 .cat + .tiles + .cat + .tiles + .cat + .tiles .tile:nth-child(2) { --tc: #ffcc33; }
 .cat + .tiles + .cat + .tiles + .cat + .tiles .tile:nth-child(3) { --tc: #b8f135; }
 .cat + .tiles + .cat + .tiles + .cat + .tiles .tile:nth-child(4) { --tc: #33d6ff; }
+/* DJ Duel gets its own featured tile at the top of home */
+.tile.dj-hero { --tc: #ff2e88; --r: -1deg; min-height: 0; padding: 16px 16px 18px; color: #fff; overflow: visible;
+  background: radial-gradient(circle at 85% 20%, #ffcc33 0 14%, transparent 15%), radial-gradient(circle at 100% 100%, #7b2cff 0 38%, transparent 39%), linear-gradient(135deg, #ff2e88, #ff5e3a); }
+.tile.dj-hero b { font-size: 44px; }
+.tile.dj-hero strong { font-family: var(--fun); font-weight: 400; font-size: 34px; text-shadow: 3px 3px 0 var(--ink); }
+.tile.dj-hero > span:not(.dj-hero-avs) { color: rgba(255,255,255,.92); font-size: 14px; max-width: 34em; }
+.tile.dj-hero .new { background: #33d6ff; color: var(--ink); }
+.dj-hero-avs { position: absolute; right: 14px; top: 46px; display: flex; pointer-events: none; }
+.dj-hero-avs img { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; background: #fffbe8; border: 2.5px solid var(--ink); margin-left: -16px;
+  box-shadow: 2px 2px 0 var(--ink); rotate: calc((var(--i) - 3) * 6deg); animation: djHeroBob 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * -.3s); }
+.dj-hero-avs img:nth-child(odd) { background: #b8f135; }
+.dj-hero-avs img:nth-child(3n) { background: #33d6ff; }
+@keyframes djHeroBob { 50% { translate: 0 -6px; } }
+.dj-hero-go { align-self: flex-start; margin-top: 10px; font-style: normal; font-family: var(--marker); font-size: 17px; background: #fffbe8; color: var(--ink);
+  padding: 4px 14px; border: 2.5px solid var(--ink); border-radius: 99px; box-shadow: 3px 3px 0 var(--ink); rotate: -2deg; }
+.tile.dj-hero:hover .dj-hero-go { rotate: 2deg; }
+@media (max-width: 560px) { .tile.dj-hero .new { top: auto; bottom: -12px; rotate: -4deg; } .dj-hero-avs { top: 40px; } .dj-hero-avs img { width: 40px; height: 40px; margin-left: -14px; } .dj-hero-avs img:nth-child(n+6) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .dj-hero-avs img { animation: none; } }
 .shame { rotate: -.6deg; }
 .footer-note { text-align: center; font-family: var(--marker); color: var(--muted); font-size: 15px; margin: 4px 0 0; rotate: -1deg; }
 
@@ -1003,6 +1021,14 @@ input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px co
     <div class="marquee" aria-hidden="true"><div>🍻 HYDRATE OR DIEDRATE ★ WHAT HAPPENS HERE STAYS IN THE GROUP CHAT ★ WATER COUNTS AS A SIP ★ NO SNITCHING ★ ONE MORE ROUND ★ BY ORDER OF THE MINISTRY ★&nbsp;🍻 HYDRATE OR DIEDRATE ★ WHAT HAPPENS HERE STAYS IN THE GROUP CHAT ★ WATER COUNTS AS A SIP ★ NO SNITCHING ★ ONE MORE ROUND ★ BY ORDER OF THE MINISTRY ★&nbsp;</div></div>
 
     <section class="dept">
+      <h2 class="dept-title"><small>Department of</small>Live party games</h2>
+      <button class="tile dj-hero" data-dg="dj"><i class="new">📱 everyone plays on their phone</i>
+        <span class="dj-hero-avs" aria-hidden="true"><img src="images/avatars/kanye.png" alt="" loading="lazy" style="--i:0"><img src="images/avatars/ariana.png" alt="" loading="lazy" style="--i:1"><img src="images/avatars/rupaul.png" alt="" loading="lazy" style="--i:2"><img src="images/avatars/walter_white.png" alt="" loading="lazy" style="--i:3"><img src="images/avatars/john_pork.png" alt="" loading="lazy" style="--i:4"><img src="images/avatars/gordon.png" alt="" loading="lazy" style="--i:5"><img src="images/avatars/patrick.png" alt="" loading="lazy" style="--i:6"></span>
+        <b>🎧</b><strong>DJ Duel</strong><span>Quiplash with songs. Everyone picks the funniest track for a prompt on their phone, the room votes, the loser drinks.</span>
+        <em class="dj-hero-go">Open a room →</em></button>
+    </section>
+
+    <section class="dept">
       <h2 class="dept-title"><small>Department of</small>Chit-chat</h2>
       <div class="jar-box tape">
         <svg class="jar" viewBox="0 0 120 140" aria-hidden="true">
@@ -1054,7 +1080,6 @@ input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px co
         <button class="tile" data-dg="bomb"><i class="new">new!</i><b>💣</b><strong>Ticking bomb</strong><span>Name one, pass it on. Don't hold it when it blows.</span></button>
         <button class="tile" data-dg="shell"><i class="new">new!</i><b>🥤</b><strong>Zoek de kroon</strong><span>Follow the crown under the cups. Lose track, drink.</span></button>
         <button class="tile" data-dg="king"><i class="new">🇯🇵 new!</i><b>🥢</b><strong>King game</strong><span>Secret numbers. The King commands. No escape.</span></button>
-        <button class="tile" data-dg="dj"><i class="new">📱 new!</i><b>🎧</b><strong>DJ Duel</strong><span>Quiplash with songs. Pick the funniest track on your phone, the room votes.</span></button>
         <button class="tile" data-dg="power"><i class="new">🇺🇸 new!</i><b>⚡</b><strong>Power Hour</strong><span>New song every minute = drink. Plays with your Spotify.</span></button>
       </div>
     </section>
