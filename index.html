@@ -5983,7 +5983,7 @@ const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15;
 const DJ_ROUNDS = [{ name: "Round 1", sub: "Normal points", mult: 1 }, { name: "Round 2", sub: "Double points!", mult: 2 }, { name: "The silly round", sub: "Silly prompts · double points", mult: 2, silly: true }];
 const DJ_SITE = "https://lucavanruiten.github.io/DRINKING/";
 // Avatars (images/avatars/*.png, cut-outs on transparent backgrounds). Each player gets their own while there are free ones.
-const DJ_AVATARS = ["actor", "bin", "bonnie", "famke", "gerard", "gordon", "humberto", "jeroen", "job retski", "judeska", "kim holland", "patricia", "pepita queen"];
+const DJ_AVATARS = ["actor", "bin", "bonnie", "famke", "gerard", "gordon", "humberto", "jeroen", "job retski", "judeska", "kim holland", "patricia", "pepita queen", "charli", "ilona", "party_till_I_die"];
 const djAvOk = (i) => Number.isInteger(i) && i >= 0 && i < DJ_AVATARS.length;
 function djAv(i, size, cls = "") {
   const st = (size ? `--s:${size}px;` : "") + (djAvOk(i) ? `background-color:hsl(${(i * 53) % 360} 85% 62%)` : "");
