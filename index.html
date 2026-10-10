@@ -653,8 +653,8 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .dj-join .code { font-size: clamp(54px, 12dvh, 120px); padding: 12px 10px; margin: 6px 0; }
 .dj-url { font-family: var(--display); font-weight: 800; font-size: 19px; word-break: break-all; margin: 0; color: var(--accent-3); }
 .dj-roster { display: flex; flex-wrap: wrap; gap: 8px; }
-.dj-roster span { border: 2.5px solid var(--ink); border-radius: 99px; padding: 7px 12px; font-weight: 700; font-size: 14px; background: var(--surface-2); box-shadow: 0 3px 0 var(--ink); }
-.dj-roster span.on { background: #b8f135; color: #14110a; animation: slap .4s cubic-bezier(.2,1.4,.4,1); }
+.dj-roster span, .dj-roster button { color: inherit; border: 2.5px solid var(--ink); border-radius: 99px; padding: 7px 12px; font-weight: 700; font-size: 14px; background: var(--surface-2); box-shadow: 0 3px 0 var(--ink); }
+.dj-roster .on { background: #b8f135; color: #14110a; animation: slap .4s cubic-bezier(.2,1.4,.4,1); }
 .dj-roster span.dj { background: var(--accent-2); color: #fff; }
 .dj-theme { position: relative; text-align: center; background: var(--accent); color: var(--accent-ink); border: 3px solid var(--ink); border-radius: 20px; padding: 14px 18px; box-shadow: 6px 6px 0 var(--ink); rotate: -1deg; animation: slap .45s cubic-bezier(.2,1.4,.4,1); }
 .dj-theme small { font-family: var(--marker); font-size: 16px; display: block; }
@@ -2502,10 +2502,10 @@ const GAMES = {
   toma: { title: "🇲🇽 Toma Todo", wide: true, make: (p) => makeToma(p) },
   king: { title: "🇯🇵 King game", make: (p) => makeKing(p) },
   power: { title: "🇺🇸 Power Hour", wide: true, make: (p) => makePower(p) },
-  dj: { title: "🎧 DJ Duel", wide: true, make: (p) => makeDJ(p) }
+  dj: { title: "🎧 DJ Duel", wide: true, own: true, make: () => makeDJ() } // own: players join with their own names, not the guest list
 };
 function openGame(key) {
-  if (players.length < 2) { pendingGame = key; openDgPlayers(); return; }
+  if (!GAMES[key].own && players.length < 2) { pendingGame = key; openDgPlayers(); return; }
   G = GAMES[key].make(players.slice()); G.key = key;
   $("#dgTitle").textContent = GAMES[key].title;
   $("#dg").classList.toggle("wide", !!GAMES[key].wide);
@@ -2531,7 +2531,7 @@ $("#dgRules").addEventListener("click", () => openModal(
   `<h2>${GAMES[G.key].title}</h2><div class="rules">${RULES[G.key]}</div><button class="btn primary" data-m="close">Got it</button>`));
 
 const RULES = {
-  dj: `<p>Quiplash, but with songs. Everyone joins on their phone with the room code (or the QR code). Spotify plays the songs from the laptop.</p>
+  dj: `<p>Quiplash, but with songs. Everyone joins on their phone with the room code (or the QR code) and types their name. Songs are searched on your phone and play from the laptop as 30-second previews. No Spotify or accounts needed.</p>
     <ul><li>Each round, everyone gets <b>2 prompts</b> on their phone, like "The song playing when you get arrested", and has <b>60 seconds</b> to pick a song for each. Too slow? You get a random <b>safety song</b> 🐌.</li>
     <li>Every prompt goes to two players. The matchups play one by one on the laptop: both songs play for <b>15 seconds</b>, with titles but without names.</li>
     <li>Everyone else votes on their phone. <b>Funny and original beats "good".</b></li>
@@ -5329,7 +5329,8 @@ const Spotify = (() => {
     const j = await r.json().catch(() => null);
     if (!r.ok) {
       const reason = j && j.error && j.error.reason;
-      if (reason === "PREMIUM_REQUIRED" || r.status === 403) throw new Error("Controlling playback needs Spotify Premium.");
+      if (reason === "PREMIUM_REQUIRED") throw new Error("Controlling playback needs Spotify Premium.");
+      if (r.status === 403) throw new Error("Spotify refused this (" + ((j && j.error && j.error.message) || "403") + "). Check that your account is added under User Management in the Spotify dashboard.");
       if (reason === "NO_ACTIVE_DEVICE" || r.status === 404) throw new Error("No active Spotify device. Open Spotify on a phone or laptop, press play once, then try again.");
       throw new Error((j && j.error && j.error.message) || "Spotify error " + r.status);
     }
@@ -5981,26 +5982,72 @@ const djUid = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) =>
 const djParse = (payload) => { try { const s = new TextDecoder().decode(payload); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
 const djOnline = () => location.protocol === "https:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname);
 const djBase = () => (djOnline() ? location.origin + location.pathname.replace(/index\.html$/, "") : DJ_SITE);
-const djSafeImg = (u) => (/^https:\/\/[a-z0-9.-]+\.(scdn\.co|spotifycdn\.com)\//i.test(u || "") ? u : "");
+const djSafeImg = (u) => (/^https:\/\/[a-z0-9.-]+\.(scdn\.co|spotifycdn\.com|mzstatic\.com|dzcdn\.net)\//i.test(u || "") ? u : "");
+// Song search without any login: Apple's iTunes Search API, with Deezer as a backup (Apple allows ~20 searches a minute
+// per network). Both return 30-second previews, which the laptop plays itself, so DJ Duel doesn't need Spotify at all.
+const djCache = new Map();
+async function djSearch(q) {
+  const key = q.toLowerCase().trim();
+  if (djCache.has(key)) return djCache.get(key);
+  let items = null;
+  try { items = await djItunes(q); } catch (e) {}
+  if (!items || !items.length) { try { items = await djDeezer(q); } catch (e) { if (!items) throw new Error("The song search isn't answering. Try again in a moment."); } }
+  djCache.set(key, items);
+  return items;
+}
+async function djItunes(q) {
+  const r = await fetch("https://itunes.apple.com/search?" + new URLSearchParams({ term: q, media: "music", entity: "song", limit: "12", country: "NL" }));
+  if (!r.ok) throw new Error("iTunes " + r.status);
+  const j = await r.json();
+  return (j.results || []).filter((t) => t.previewUrl).map((t) => ({ name: t.trackName, artist: t.artistName, preview: t.previewUrl,
+    thumb: t.artworkUrl100 || t.artworkUrl60 || "", art: (t.artworkUrl100 || "").replace(/100x100bb/, "400x400bb") }));
+}
+function djDeezer(q) { // Deezer only allows browser calls through JSONP
+  return new Promise((res, rej) => {
+    const cb = "djdz" + djUid(), sc = document.createElement("script");
+    const done = (v, err) => { delete window[cb]; sc.remove(); clearTimeout(tm); err ? rej(err) : res(v); };
+    const tm = setTimeout(() => done(null, new Error("Deezer timeout")), 8000);
+    window[cb] = (j) => done(((j && j.data) || []).filter((t) => t.preview).map((t) => ({ name: t.title, artist: (t.artist && t.artist.name) || "", preview: t.preview,
+      thumb: (t.album && t.album.cover_small) || "", art: (t.album && t.album.cover_medium) || "" })));
+    sc.onerror = () => done(null, new Error("Deezer"));
+    sc.src = "https://api.deezer.com/search?" + new URLSearchParams({ q, limit: "12", output: "jsonp", callback: cb });
+    document.head.append(sc);
+  });
+}
+// A track that came from a phone: keep only known fields and known hosts.
+function djCleanTrack(t) {
+  if (!t || typeof t !== "object") return null;
+  const preview = String(t.preview || "");
+  if (!/^https:\/\/([a-z0-9-]+\.)*(itunes\.apple\.com|apple\.com|dzcdn\.net)\//i.test(preview)) return null;
+  return { name: String(t.name || "?").slice(0, 120), artist: String(t.artist || "").slice(0, 120), preview, art: djSafeImg(String(t.art || "")), thumb: djSafeImg(String(t.thumb || "")) };
+}
+const djAudio = new Audio();
 const es = (v) => esc(String(v == null ? "" : v)); // for data that came over the wire
 function djTrackBtn(t, attr, on) {
   const img = djSafeImg(t.thumb || t.art);
   return `<button class="dj-track${on ? " on" : ""}" ${attr}>${img ? `<img src="${es(img)}" alt="">` : `<span class="ph">🎵</span>`}<div><b>${es(t.name)}</b><span>${es(t.artist)}</span></div></button>`;
 }
 
-// The laptop's side of the live link. Phones say hello with a name from the guest list; one phone per name.
+// The laptop's side of the live link. Phones join with a name they type themselves; one phone per name.
+// A phone also sends a device secret, so it can take its own name back after a reload or a sleep.
 // Topics: <room>/host (retained "the room is open"), <room>/up/<phoneId> (phone → laptop), <room>/down/<phoneId> (laptop → phone).
 function djRoom(h) {
-  const room = { code: "", status: "starting", err: "", conns: new Map() /* name → phoneId */, seen: new Map() /* phoneId → { name, t } */, clients: [], dead: false };
+  const room = { code: "", status: "starting", err: "", conns: new Map() /* name → phoneId */, seen: new Map() /* phoneId → { name, t } */,
+    players: new Map() /* lower-case name → { name, secret, id } */, clients: [], dead: false };
   room.code = Array.from({ length: 4 }, () => DJ_ALPH[rand(DJ_ALPH.length)]).join("");
   const T = djTopic(room.code);
   const pub = (topic, msg, retain = false) => room.clients.forEach((c) => { if (c.connected) c.publish(topic, msg == null ? "" : JSON.stringify(msg), { qos: 0, retain }); });
   const to = (id, msg) => pub(T + "/down/" + id, msg);
-  const names = (id) => to(id, { t: "names", names: h.names(), taken: [...room.conns.keys()] });
-  function drop(id) {
-    const x = room.seen.get(id); room.seen.delete(id);
-    if (x && x.name && room.conns.get(x.name) === id) { room.conns.delete(x.name); h.change(); }
+  // Forget which phone holds a name (the player stays, with their score, until they come back).
+  function release(id) {
+    const x = room.seen.get(id);
+    if (!x || !x.name) return;
+    const pl = room.players.get(x.name.toLowerCase());
+    if (pl && pl.id === id) pl.id = null;
+    if (room.conns.get(x.name) === id) room.conns.delete(x.name);
+    x.name = null;
   }
+  function drop(id) { release(id); room.seen.delete(id); h.change(); }
   function onMsg(topic, payload) {
     if (room.dead || !topic.startsWith(T + "/up/")) return;
     const id = topic.slice(T.length + 4), d = djParse(payload);
@@ -6008,18 +6055,30 @@ function djRoom(h) {
     const me = room.seen.get(id) || { name: null, t: 0 };
     me.t = Date.now(); room.seen.set(id, me);
     if (d.t === "bye") return drop(id);
+    if (d.t === "leave") { // "not me, change my name"
+      const nm = me.name; release(id);
+      if (nm && h.removable(nm)) room.players.delete(nm.toLowerCase());
+      return h.change();
+    }
     if (d.t === "hi" || d.t === "ping") {
-      if (d.t === "hi") names(id);
       if (me.name && room.conns.get(me.name) !== id) { me.name = null; to(id, { t: "kicked" }); } // someone else took this name since
       else if (me.name && d.t === "ping") h.ping(me.name); // the relays may drop a message now and then: every ping gets the current state
       return;
     }
     if (d.t === "hello") {
-      const name = String(d.name || "");
-      if (!h.names().includes(name)) return names(id);
-      const old = room.conns.get(name);
-      if (old && old !== id) { const o = room.seen.get(old); if (o) o.name = null; to(old, { t: "kicked" }); }
-      me.name = name; room.conns.set(name, id); h.join(name);
+      const name = String(d.name || "").replace(/\s+/g, " ").trim().slice(0, 16), secret = String(d.secret || "").slice(0, 40);
+      if (!name) return to(id, { t: "badname" });
+      let pl = room.players.get(name.toLowerCase());
+      // Someone else is playing under this name right now.
+      if (pl && pl.id && pl.id !== id && room.seen.has(pl.id) && pl.secret !== secret) return to(id, { t: "nametaken", name });
+      if (!pl) {
+        if (room.players.size >= 16) return to(id, { t: "full" });
+        pl = { name, secret, id: null }; room.players.set(name.toLowerCase(), pl);
+      }
+      if (pl.id && pl.id !== id) { const o = room.seen.get(pl.id); if (o) o.name = null; to(pl.id, { t: "kicked", why: "elsewhere" }); }
+      if (me.name && me.name !== pl.name) release(id);
+      pl.secret = secret; pl.id = id; me.name = pl.name; room.conns.set(pl.name, id);
+      to(id, { t: "joined", name: pl.name }); h.join(pl.name);
       return;
     }
     if (me.name && room.conns.get(me.name) === id) h.msg(me.name, d);
@@ -6042,6 +6101,12 @@ function djRoom(h) {
   // Phones ping every 10 s; drop the ones that went quiet.
   room.sweep = setInterval(() => { const now = Date.now(); for (const [id, x] of room.seen) if (now - x.t > 35000) drop(id); }, 5000);
   room.send = (name, msg) => { const id = room.conns.get(name); if (id) to(id, msg); };
+  room.names = () => [...room.players.values()].map((x) => x.name);
+  room.kick = (name) => {
+    const pl = room.players.get(name.toLowerCase()); if (!pl) return;
+    if (pl.id) { to(pl.id, { t: "kicked", why: "host" }); release(pl.id); }
+    room.players.delete(name.toLowerCase()); h.change();
+  };
   room.close = () => {
     if (room.dead) return;
     room.dead = true; clearInterval(room.sweep);
@@ -6050,11 +6115,12 @@ function djRoom(h) {
   return room;
 }
 
-function makeDJ(p) {
+function makeDJ() {
   const s = { phase: "lobby", ri: -1, parts: [], prompts: [], order: [], mi: 0, flip: 0, cur: 0, endsAt: 0, loading: false, votes: {}, res: null,
     score: {}, delta: {}, bagN: [], bagS: [], found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0, seq: 0 };
   let room = null;
   const online = (x) => !!(room && room.conns.has(x));
+  const all = () => (room ? room.names() : []); // everyone who joined, in joining order
   const RD = () => DJ_ROUNDS[s.ri];
   const fromBag = (key, list) => { if (!s[key].length) s[key] = shuffleArr(list.slice()); return s[key].pop(); };
   // A player's two prompts: [{ j: prompt index, slot: 0 or 1 }].
@@ -6094,7 +6160,7 @@ function makeDJ(p) {
     loadLib("mqtt").then(() => {
       if (G !== g) return;
       room = djRoom({
-        names: () => p,
+        removable: (x) => s.phase === "lobby" && !s.score[x],
         join: (x) => { tone(880, 0.06, "triangle", 0.08); tone(1320, 0.08, "triangle", 0.06, 0.06); room.send(x, stFor(x)); paint(); },
         change: () => paint(),
         ping: (x) => room.send(x, stFor(x)),
@@ -6105,15 +6171,8 @@ function makeDJ(p) {
   }
   function onMsg(x, d) {
     const answering = s.phase === "answer" && s.parts.includes(x);
-    if (d.t === "search" && answering) {
-      const q = String(d.q || "").slice(0, 80).trim(); if (!q) return;
-      Spotify.search(q).then((items) => {
-        if (G !== g || !room) return;
-        s.found[x] = items || [];
-        room.send(x, { t: "results", items: items || [], err: items ? "" : Spotify.err });
-      });
-    } else if (d.t === "pick" && answering) {
-      const m = mine(x)[d.k | 0], t = (s.found[x] || [])[d.i | 0];
+    if (d.t === "pick" && answering) {
+      const m = mine(x)[d.k | 0], t = djCleanTrack(d.track);
       if (!m || !t) return;
       s.prompts[m.j].songs[m.slot] = t;
       tone(660, 0.08, "triangle", 0.1); tone(990, 0.12, "triangle", 0.08, 0.08);
@@ -6124,7 +6183,7 @@ function makeDJ(p) {
 
   // ---------- flow ----------
   function startRound() {
-    const parts = p.filter(online);
+    const parts = all().filter(online);
     if (parts.length < 3) { s.err = "You need at least 3 phones connected."; return paint(); }
     s.ri++; s.err = ""; s.gen++;
     const o = shuffleArr(parts.slice()), N = o.length;
@@ -6149,7 +6208,7 @@ function makeDJ(p) {
     // Too slow? You get a safety song.
     for (const pr of s.prompts) for (const slot of [0, 1]) {
       if (pr.songs[slot]) continue;
-      const items = await Spotify.search(DJ_SAFETY[rand(DJ_SAFETY.length)]);
+      const items = await djSearch(DJ_SAFETY[rand(DJ_SAFETY.length)]).catch(() => null);
       if (G !== g) return;
       if (items && items[0]) { pr.songs[slot] = items[0]; pr.safety[slot] = true; }
     }
@@ -6165,16 +6224,20 @@ function makeDJ(p) {
   function playCur() {
     const t = curPr().songs[disp()[s.cur]];
     s.loading = true; s.endsAt = 0; s.err = ""; paint(); sync();
-    Spotify.playTrack(t.uri, 0).then((ok) => {
+    const a = djAudio, cur = s.cur, mi = s.mi;
+    a.pause(); a.src = t.preview; a.volume = 1;
+    a.play().then(() => {
+      if (G !== g || s.phase !== "show" || s.cur !== cur || s.mi !== mi) return;
+      s.loading = false; s.endsAt = Date.now() + DJ_CLIP * 1000; paint(); sync();
+      if (cur === 0) { const nx = curPr().songs[disp()[1]]; if (nx) new Audio(nx.preview).preload = "auto"; } // warm up song B
+    }).catch(() => {
       if (G !== g || s.phase !== "show") return;
-      s.loading = false;
-      if (!ok) { s.err = Spotify.err || "Spotify didn't start playing."; paint(); return; }
-      s.endsAt = Date.now() + DJ_CLIP * 1000; paint(); sync();
+      s.loading = false; s.err = "This preview wouldn't play. Try again, or skip it."; paint();
     });
   }
   function nextSong() {
     if (s.cur === 0) { s.cur = 1; playCur(); }
-    else { Spotify.pause(); startVote(); }
+    else { djAudio.pause(); startVote(); }
   }
   function startVote() {
     s.phase = "vote"; s.votes = {}; s.endsAt = Date.now() + DJ_VOTE * 1000; s.err = "";
@@ -6210,7 +6273,7 @@ function makeDJ(p) {
     }
     authors.forEach((x, k) => { s.score[x] = (s.score[x] || 0) + pts[k]; s.delta[x] = (s.delta[x] || 0) + pts[k]; });
     s.res = { v, authors, pts, win, lash, drink: drinkRes, safety: d.map((sl) => pr.safety[sl]), missing };
-    s.phase = "reveal"; s.endsAt = 0;
+    s.phase = "reveal"; s.endsAt = 0; djAudio.pause();
     for (let k = 0; k < 12; k++) noiseHit(0.05, 0.12, 300, "lowpass", k * 0.05);
     paint(); sync();
     setTimeout(() => {
@@ -6230,7 +6293,6 @@ function makeDJ(p) {
     last.forEach((x) => drink(x, 2));
     s.board = { rows: names.map((x) => ({ name: x, score: s.score[x], delta: s.delta[x] || 0 })), last, first: first.length === 1 ? first[0] : null, given: false };
     s.phase = s.ri === DJ_ROUNDS.length - 1 ? "final" : "board"; s.endsAt = 0;
-    Spotify.pause();
     [392, 523, 659, 784, 1047].forEach((f, j) => tone(f, 0.2, "sawtooth", 0.05, j * 0.1));
     paint(); sync();
     setTimeout(() => {
@@ -6274,19 +6336,19 @@ function makeDJ(p) {
         const q = qrcode(0, "M"); q.addData(djBase() + "?dj=" + code); q.make();
         s.qr = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); s.qrFor = code;
       }
-      const cnt = p.filter(online).length;
+      const names = all(), cnt = names.filter(online).length;
       main = `<div class="dj-join"><div class="dj-qr">${code && s.qrFor === code ? s.qr : "📡"}</div><div>
           <p class="label">Grab your phones 📱</p>
           ${code ? `<p class="sub">Scan the QR code, or go to</p><p class="dj-url">${esc(djBase().replace(/^https:\/\//, ""))}</p><p class="sub">tap <b>Join a room</b> and enter:</p><div class="code">${code}</div>`
             : err ? `<p class="error" style="text-align:left">${esc(err)}</p><button class="btn" data-a="reopen">Try again</button>` : `<p class="big-msg">Opening the room…</p>`}
         </div></div>
         <div class="center"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${DJ_ANSWER} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`;
-      side = `<div class="section"><p class="label">Who's in · ${cnt}/${p.length} phones</p><div class="dj-roster">${p.map((x) => `<span class="${online(x) ? "on" : ""}">${online(x) ? "📱 " : ""}${esc(x)}</span>`).join("")}</div>
-          <p class="note">Everyone plays on their own phone. Only connected players take part.</p></div>
-        <div class="section"><p class="label" style="color:#1db954">● Spotify</p>${Spotify.connected ? `<p class="sub">Connected. The songs play on your active Spotify device (needs Premium).</p>`
-          : `<p class="sub">The songs come from Spotify, so connect it first.</p><button class="btn spot-btn" data-a="sound">Connect Spotify</button>`}</div>
+      side = `<div class="section"><p class="label">Who's in · ${cnt} ${cnt === 1 ? "phone" : "phones"}</p>
+          ${names.length ? `<div class="dj-roster">${names.map((x, i) => `<button class="${online(x) ? "on" : ""}" data-a="kick" data-i="${i}" title="Remove">${online(x) ? "📱 " : "💤 "}${esc(x)}</button>`).join("")}</div>
+          <p class="note">Everyone joins on their own phone and types their name. Tap a name to remove it.</p>` : `<p class="sub">Nobody yet. Scan the QR code to join!</p>`}</div>
+        <p class="note">🔊 The songs play from this laptop as 30-second previews. No Spotify or accounts needed, just turn the volume up.</p>
         ${s.err && code ? `<p class="error">${esc(s.err)}</p>` : ""}
-        <button class="btn primary pass-btn" data-a="start"${Spotify.connected && cnt >= 3 ? "" : " disabled"}>${cnt >= 3 ? "🎧 Start round 1" : `Waiting for phones (${cnt}/3)`}</button>`;
+        <button class="btn primary pass-btn" data-a="start"${cnt >= 3 ? "" : " disabled"}>${cnt >= 3 ? "🎧 Start round 1" : `Waiting for phones (${cnt}/3)`}</button>`;
     } else if (s.phase === "intro") {
       main = `<div class="dj-round"><small>${esc(RD().name)}</small><b>${esc(RD().sub)}</b><p>📱 Check your phone: you've got 2 prompts and ${DJ_ANSWER} seconds.</p></div>`;
       side = `<div class="dg-status">${roundChip()}</div><button class="btn primary" data-a="go">Go now →</button>${mini()}`;
@@ -6347,18 +6409,25 @@ function makeDJ(p) {
     if (!c || !s.endsAt) return;
     const total = s.phase === "vote" ? DJ_VOTE : s.phase === "answer" ? DJ_ANSWER : DJ_CLIP, left = Math.max(0, (s.endsAt - Date.now()) / 1000), sec = Math.ceil(left);
     c.textContent = s.phase === "show" ? "0:" + String(sec).padStart(2, "0") : sec;
+    if (s.phase === "show") djAudio.volume = Math.max(0, Math.min(1, left / 1.2)); // fade out at the end
     $("#djBar").style.width = (left / total) * 100 + "%";
     if (s.phase !== "show" && sec <= 3 && s._beep !== s.phase + sec) { s._beep = s.phase + sec; tone(660, 0.1, "square", 0.07); }
   }
   const timer = setInterval(() => {
-    if (G !== g) { clearInterval(timer); if (room) room.close(); room = null; return; }
+    if (G !== g) { clearInterval(timer); djAudio.pause(); if (room) room.close(); room = null; return; }
     tick();
   }, 250);
 
   const g = {
     render() { if (!room && s.phase === "lobby") openRoom(); paint(); },
-    act(a) {
-      if (a === "start") return Spotify.connected ? startRound() : openSound();
+    act(a, el) {
+      if (a === "start") {
+        // Clear the air for the clips: the party mix and any Spotify music.
+        if (Music.on) Music.toggle();
+        if (Spotify.active) Spotify.pause();
+        djAudio.play().catch(() => {}); djAudio.pause(); // unlock audio with this tap
+        return startRound();
+      }
       if (a === "sound") return openSound();
       if (a === "reopen") { if (room) room.close(); room = null; openRoom(); return paint(); }
       if (a === "go") return s.phase === "intro" && startAnswer();
@@ -6367,7 +6436,8 @@ function makeDJ(p) {
       if (a === "retry") return playCur();
       if (a === "reveal") return reveal();
       if (a === "next") { if (++s.mi < s.order.length) return startMatchup(); return showBoard(); }
-      if (a === "give") return giveSips(s.board.first, 2, p, () => { s.board.given = true; paint(); });
+      if (a === "give") return giveSips(s.board.first, 2, all(), () => { s.board.given = true; paint(); });
+      if (a === "kick") { const x = all()[+el.dataset.i]; if (x && s.phase === "lobby" && confirm(`Remove ${x} from the game?`)) room.kick(x); return; }
       if (a === "nextround") return startRound();
       if (a === "again") { s.ri = -1; s.score = {}; s.delta = {}; s.phase = "lobby"; paint(); return sync(); }
     }
@@ -6377,11 +6447,14 @@ function makeDJ(p) {
 
 /* ---------- DJ Duel: the phone side ---------- */
 const DJP_KEY = "kletspotje:dj-me";
-const DJP = { client: null, id: "", T: "", run: 0, ping: null, code: "", name: "", names: [], taken: [], st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
+const DJP = { client: null, id: "", T: "", run: 0, ping: null, code: "", name: "", joined: false, draft: "", secret: "", st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
 function djpJoin(code) {
   code = String(code).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
-  const me = loadJ(DJP_KEY);
-  Object.assign(DJP, { code, name: me && me.code === code ? me.name : "", key: "", st: null, found: null, q: "", err: "", searching: false, edit: null });
+  const me = loadJ(DJP_KEY) || {};
+  // The secret identifies this phone, so it can take its own name back after a reload.
+  const secret = me.secret || djUid() + djUid();
+  saveJ(DJP_KEY, { ...me, secret });
+  Object.assign(DJP, { code, secret, name: me.code === code ? me.name || "" : "", joined: false, draft: me.name || "", key: "", st: null, found: null, q: "", err: "", searching: false, edit: null });
   $("#djpCode").textContent = code;
   Music.stop();
   show("djp"); djpConnect();
@@ -6417,7 +6490,7 @@ function djpConnect() {
       const hello = () => {
         c.subscribe([T + "/down/" + id, T + "/host"], { qos: 0 });
         djpSend({ t: "hi" });
-        if (DJP.name) djpSend({ t: "hello", name: DJP.name });
+        djpHello();
       };
       c.on("message", (topic, payload) => {
         const d = djParse(payload);
@@ -6428,7 +6501,7 @@ function djpConnect() {
       c.on("offline", () => { if (DJP.client === c && DJP.status === "on") { DJP.status = "reconnecting"; djpRender(); } });
       c.on("error", () => {});
       DJP.status = "on"; DJP.err = ""; hello(); djpRender();
-      clearInterval(DJP.ping); DJP.ping = setInterval(() => djpSend({ t: "ping" }), 5000);
+      clearInterval(DJP.ping); DJP.ping = setInterval(() => { djpSend({ t: "ping" }); if (DJP.name && !DJP.joined) djpHello(); }, 5000); // keep asking if a join got lost
       return;
     }
     if (run !== DJP.run) return;
@@ -6448,16 +6521,25 @@ function djpLeave() {
   Object.assign(DJP, { st: null, status: "" });
   show("home");
 }
+const djpHello = () => { if (DJP.name) djpSend({ t: "hello", name: DJP.name, secret: DJP.secret }); };
 const djpSend = (m) => { const c = DJP.client; if (c && c.connected) c.publish(DJP.T + "/up/" + DJP.id, JSON.stringify(m), { qos: 0 }); };
 function djpData(d) {
   if (!d || typeof d !== "object") return;
-  if (d.t === "kicked") { DJP.name = ""; DJP.st = null; DJP.key = ""; saveJ(DJP_KEY, null); return djpRender(); }
-  if (d.t === "names") {
-    DJP.names = Array.isArray(d.names) ? d.names.map(String) : []; DJP.taken = Array.isArray(d.taken) ? d.taken.map(String) : [];
-    if (DJP.name && !DJP.names.includes(DJP.name)) { DJP.name = ""; DJP.st = null; DJP.key = ""; }
+  if (d.t === "joined") {
+    Object.assign(DJP, { name: String(d.name), joined: true, err: "" });
+    saveJ(DJP_KEY, { code: DJP.code, name: DJP.name, secret: DJP.secret });
+    return djpRender();
+  }
+  if (d.t === "kicked" || d.t === "nametaken" || d.t === "badname" || d.t === "full") {
+    const was = DJP.name;
+    Object.assign(DJP, { name: "", joined: false, st: null, key: "", draft: was || DJP.draft });
+    DJP.err = d.t === "nametaken" ? `"${was}" is already taken. Pick another name.` : d.t === "full" ? "The game is full (16 players)."
+      : d.t === "badname" ? "Type a name first." : d.why === "host" ? "The host removed you. You can join again with another name." : "You joined from another device.";
+    saveJ(DJP_KEY, { code: DJP.code, name: "", secret: DJP.secret });
     return djpRender();
   }
   if (d.t === "state") {
+    if (!DJP.joined) return;
     if (DJP.st && d.seq < DJP.st.seq) return; // a late, older update
     const key = JSON.stringify({ ...d, left: 0 });
     DJP.endsAt = d.left ? Date.now() + d.left * 1000 : 0;
@@ -6470,11 +6552,6 @@ function djpData(d) {
     }
     return djpRender();
   }
-  if (d.t === "results") {
-    DJP.searching = false; DJP.found = Array.isArray(d.items) ? d.items : [];
-    DJP.err = d.err ? String(d.err) : DJP.found.length ? "" : "Nothing found. Try another search.";
-    return djpRender();
-  }
 }
 function djpTick() {
   const c = $("#djpClock");
@@ -6483,7 +6560,7 @@ function djpTick() {
 function djpRender() {
   if (!$("#djp").classList.contains("active")) return;
   $("#djpDot").classList.toggle("on", DJP.status === "on");
-  const st = DJP.st, focused = document.activeElement && document.activeElement.id === "djpQ";
+  const st = DJP.st, focused = document.activeElement && document.activeElement.id;
   const center = (icon, title, sub) => `<div class="center"><div class="big">${icon}</div><p class="big-msg">${title}</p>${sub ? `<p class="sub">${sub}</p>` : ""}</div>`;
   const prompt = (small, text) => `<div class="dj-theme"><small>${small}</small><b>${es(text)}</b></div>`;
   const clockEl = `<div class="dj-clock"><b id="djpClock"></b></div>`;
@@ -6492,11 +6569,11 @@ function djpRender() {
   else if (DJP.status === "reconnecting") h = center("📡", "Reconnecting…", "Lost the signal for a moment. Hang on.");
   else if (DJP.status !== "on") h = center("🔌", DJP.status === "lost" ? "Lost the connection" : "Couldn't connect", es(DJP.status === "lost" ? "The laptop closed the room, or your phone went to sleep." : DJP.err))
     + `<button class="btn primary" data-p="retry">Reconnect</button><button class="btn ghost" data-p="leave">Use a different code</button>`;
-  else if (!DJP.name) h = center("🎧", "Who are you?", "Tap your name.")
-    + `<div class="name-grid">${DJP.names.map((x, i) => `<button class="name-btn" data-p="me" data-i="${i}">${es(x)}${DJP.taken.includes(x) ? " <small>📱</small>" : ""}</button>`).join("")}</div>
-      <p class="note">Not on the list? Ask the host to add you to the guest list and restart DJ Duel.</p>`;
-  else if (!st) h = center("🙌", "Joining…", "");
-  else if (st.phase === "lobby") h = center("🙌", `You're in, ${es(DJP.name)}!`, "Waiting for the host to start. Keep this screen open.") + `<button class="link" data-p="rename">Not ${es(DJP.name)}? Change</button>`;
+  else if (!DJP.name) h = center("🎧", "What's your name?", "This is how you'll show up on the big screen.")
+    + `<div class="player-row"><input type="text" id="djpName" maxlength="16" placeholder="Your name" value="${es(DJP.draft)}" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go"><button class="btn primary" data-p="join">Join</button></div>
+      ${DJP.err ? `<p class="error" style="text-align:left">${es(DJP.err)}</p>` : ""}`;
+  else if (!DJP.joined || !st) h = center("🙌", "Joining…", "");
+  else if (st.phase === "lobby") h = center("🙌", `You're in, ${es(DJP.name)}!`, "Waiting for the host to start. Keep this screen open.") + `<button class="link" data-p="rename">✏️ Change my name</button>`;
   else if (!st.inGame && st.phase !== "board" && st.phase !== "final") h = center("👀", "Round in progress", "You'll be in from the next round. Watch the laptop for now.");
   else if (st.phase === "intro") h = center("🎧", es(st.round), es(st.sub) + "<br>Two prompts are coming your way…");
   else if (st.phase === "answer") {
@@ -6542,27 +6619,45 @@ function djpRender() {
   if (q) {
     q.addEventListener("input", () => (DJP.q = q.value));
     q.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); djpAct("search"); } });
-    if (focused) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
   }
+  const nm = $("#djpName");
+  if (nm) {
+    nm.addEventListener("input", () => (DJP.draft = nm.value));
+    nm.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); djpAct("join"); } });
+  }
+  const f = focused && document.getElementById(focused); // a redraw shouldn't steal the keyboard
+  if (f && f.tagName === "INPUT") { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
   djpTick();
 }
 function djpAct(a, el) {
   if (a === "retry") return djpConnect();
   if (a === "leave") { djpLeave(); $("#btnJoin").click(); return; }
-  if (a === "me") {
-    const name = DJP.names[+el.dataset.i]; if (!name) return;
-    if (DJP.taken.includes(name) && !confirm(`${name} is already connected on another phone. Is this you?`)) return;
-    DJP.name = name; DJP.st = null; DJP.key = ""; saveJ(DJP_KEY, { code: DJP.code, name });
-    djpSend({ t: "hello", name }); return djpRender();
+  if (a === "join") {
+    const name = (($("#djpName") || {}).value || DJP.draft).replace(/\s+/g, " ").trim().slice(0, 16);
+    if (!name) { DJP.err = "Type a name first."; return djpRender(); }
+    Object.assign(DJP, { name, draft: name, joined: false, err: "" });
+    if (document.activeElement) document.activeElement.blur();
+    djpHello(); return djpRender();
   }
-  if (a === "rename") { DJP.name = ""; DJP.st = null; DJP.key = ""; saveJ(DJP_KEY, null); djpConnect(); return; }
+  if (a === "rename") {
+    djpSend({ t: "leave" });
+    Object.assign(DJP, { draft: DJP.name, name: "", joined: false, st: null, key: "", err: "" });
+    saveJ(DJP_KEY, { code: DJP.code, name: "", secret: DJP.secret });
+    return djpRender();
+  }
   if (a === "search") {
     const q = ($("#djpQ") || {}).value || DJP.q; DJP.q = q.trim(); if (!DJP.q) return;
-    DJP.searching = true; DJP.err = ""; djpSend({ t: "search", q: DJP.q }); if (document.activeElement) document.activeElement.blur(); return djpRender();
+    DJP.searching = true; DJP.err = ""; if (document.activeElement) document.activeElement.blur();
+    const run = DJP.searchRun = (DJP.searchRun || 0) + 1;
+    djSearch(DJP.q).then((items) => { if (run !== DJP.searchRun) return; DJP.found = items; DJP.err = items.length ? "" : "Nothing found. Try another search."; })
+      .catch((e) => { if (run === DJP.searchRun) DJP.err = e.message; })
+      .finally(() => { if (run === DJP.searchRun) { DJP.searching = false; djpRender(); } });
+    return djpRender();
   }
   if (a === "pick") {
     const k = +el.dataset.k, t = DJP.found && DJP.found[+el.dataset.i];
-    djpSend({ t: "pick", k, i: +el.dataset.i });
+    if (!t) return;
+    djpSend({ t: "pick", k, track: { name: t.name, artist: t.artist, preview: t.preview, art: t.art, thumb: t.thumb } });
     if (t && DJP.st && DJP.st.mine && DJP.st.mine[k]) DJP.st.mine[k].pick = t; // show it straight away; the laptop confirms
     Object.assign(DJP, { found: null, q: "", edit: null, err: "" });
     tone(880, 0.06, "triangle", 0.06); if (navigator.vibrate) navigator.vibrate(30);
@@ -6577,7 +6672,7 @@ $("#djpExit").addEventListener("click", () => { if (confirm("Leave the DJ Duel?"
 // Phones sleep and drop the link: reconnect as soon as the screen is back on.
 document.addEventListener("visibilitychange", () => {
   if (document.hidden || !$("#djp").classList.contains("active") || DJP.status === "connecting") return;
-  if (DJP.client && DJP.client.connected) { djpSend({ t: "hi" }); if (DJP.name) djpSend({ t: "hello", name: DJP.name }); } // catch up on what we missed
+  if (DJP.client && DJP.client.connected) djpHello(); // catch up on what we missed
   else djpConnect();
 });
 
