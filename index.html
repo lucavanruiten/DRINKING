@@ -737,6 +737,18 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .dj-votes i.dj-who { gap: 4px; padding: 2px 8px 2px 2px; }
 .djp-dot { width: 12px; height: 12px; border-radius: 50%; background: #ff3d3d; border: 2px solid var(--ink); flex: none; }
 .djp-dot.on { background: #b8f135; }
+.dj-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.dj-tabs button { color: inherit; font-family: var(--display); font-weight: 800; font-size: 16px; border: 2.5px solid var(--ink); border-radius: 99px; padding: 8px 18px; background: var(--surface-2); box-shadow: 0 3px 0 var(--ink); }
+.dj-tabs button.on { background: var(--accent); color: var(--accent-ink); rotate: -2deg; }
+.dj-set { display: flex; flex-direction: column; }
+.dj-set .options.four { grid-template-columns: repeat(4, 1fr); }
+.dj-set .options.three { grid-template-columns: repeat(3, 1fr); }
+.dj-set .opt { padding: 10px 8px; }
+.dj-cust { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 30dvh; overflow-y: auto; }
+.dj-cust li { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 2px solid var(--ink); border-radius: 12px; padding: 6px 6px 6px 12px; font-weight: 600; }
+.dj-cust li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.dj-cust li button { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); background: #ff5a5a; color: #fff; font-weight: 900; }
+@media (max-width: 600px) { .dj-set .options.four { grid-template-columns: 1fr 1fr; } }
 #djp .center .big { font-size: 72px; line-height: 1; }
 .dj-round { text-align: center; background: linear-gradient(135deg, #ff2e88, #7a2cff); color: #fff; border: 3px solid var(--ink); border-radius: 26px; padding: 34px 22px; box-shadow: 8px 8px 0 var(--ink); rotate: -1.2deg; animation: slap .5s cubic-bezier(.2,1.4,.4,1); }
 .dj-round small { font-family: var(--marker); font-size: 22px; display: block; }
@@ -2550,8 +2562,9 @@ $("#dgRules").addEventListener("click", () => openModal(
 
 const RULES = {
   dj: `<p>Quiplash, but with songs. Everyone joins on their phone with the room code (or the QR code) and types their name. Songs are searched on your phone and play from the laptop as 30-second previews. No Spotify or accounts needed.</p>
-    <ul><li>Each round, everyone gets <b>2 prompts</b> on their phone, like "The song playing when you get arrested", and has <b>60 seconds</b> to pick a song for each. Too slow? You get a random <b>safety song</b> 🐌.</li>
-    <li>Every prompt goes to two players. The matchups play one by one on the laptop: both songs play for <b>15 seconds</b>, with titles but without names.</li>
+    <ul><li>Each round, everyone gets <b>2 prompts</b> on their phone, like "The song playing when you get arrested", and has <b>60 seconds</b> to pick a song for each (the host can change this in ⚙️ Settings). Too slow? You get a random <b>safety song</b> 🐌.</li>
+    <li>Every prompt goes to two players. The matchups play one by one on the laptop: both songs play for <b>15 seconds</b> (10–30 in ⚙️ Settings), with titles but without names.</li>
+    <li>In ⚙️ Settings the host can also add their own prompts and switch on <b>player names</b>: some prompts are then about someone in the room, like "Songs at Luca's birthday party".</li>
     <li>Everyone else votes on their phone. <b>Funny and original beats "good".</b></li>
     <li>Points: 100 per vote, +100 for winning the matchup, and a <b>SONGLASH</b> (every single vote) is +200 more.</li>
     <li>The loser of a matchup drinks the vote difference (max 3). A songlash = 3 sips.</li>
@@ -5979,7 +5992,32 @@ const DJ_SAFETY = [
   "Blue (Da Ba Dee) Eiffel 65", "Baby Shark Pinkfong", "Chicken Song J.J. Lionel", "Ievan Polkka", "The Final Countdown Europe", "Trololo Eduard Khil",
   "Gummy Bear Song", "Ik heb een toeter op mijn waterscooter", "Cha Cha Slide", "Mr. Saxobeat Alexandra Stan"
 ];
-const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15;
+// Prompts about someone in the room (Settings → player names). {name} is never one of the two players answering it.
+const DJ_NAMED = [
+  "The song playing at {name}'s birthday party", "{name}'s walk-out song at their own wedding", "What {name} sings in the shower", "What {name} plays on repeat after a breakup",
+  "{name}'s secret guilty pleasure", "What {name} would want played at their funeral", "The song that plays when {name} walks into the club", "{name}'s ringtone in 2009",
+  "{name} after the 7th beer", "What {name} listens to while stalking their ex on Instagram", "The theme song of {name}'s love life", "{name} at karaoke at 2 AM",
+  "What {name}'s neighbours hear through the wall", "The song {name} uses to slide into someone's DMs", "{name}'s walk of shame on Sunday morning", "The soundtrack of {name}'s dating profile",
+  "What plays in {name}'s head during a job interview", "{name}'s pre-drinks hype song", "The song {name} cries to in the car", "{name} trying to flirt",
+  "The national anthem of {name}'s group chat", "What {name} hums on the toilet", "{name}'s entrance music as a pro wrestler", "A song that describes {name}'s cooking",
+  "{name} coming home at 5 AM", "The soundtrack of {name}'s biopic", "What {name} puts on to start the party (and it doesn't work)", "{name}'s gym playlist (they go twice a year)",
+  "{name} on holiday in Sunny Beach", "What {name}'s ex is listening to right now", "The song {name} would get tattooed on their body", "{name}'s villain origin story",
+  "The last song {name} heard before getting dumped", "{name} when the Tikkie comes in"
+];
+const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15; // defaults; the host can change clip and answer time in ⚙️ Settings
+const DJ_CLIPS = [[10, "Speed run"], [15, "Default"], [20, "A bit longer"], [30, "Full preview"]], DJ_ANSWERS = [[60, "Default"], [90, "Relaxed"], [120, "Very drunk"]];
+// Host settings, saved on the laptop.
+const DJ_CFG_KEY = "kletspotje:dj-settings";
+function djCfg() {
+  const c = loadJ(DJ_CFG_KEY) || {};
+  return {
+    clip: DJ_CLIPS.some(([v]) => v === c.clip) ? c.clip : DJ_CLIP,
+    answer: DJ_ANSWERS.some(([v]) => v === c.answer) ? c.answer : DJ_ANSWER,
+    names: !!c.names,
+    custom: Array.isArray(c.custom) ? c.custom.filter((q) => typeof q === "string" && q.trim()).map((q) => q.trim().slice(0, 120)).slice(0, 200) : []
+  };
+}
+const djFill = (q, x) => q.replace(/\{name\}/gi, x);
 const DJ_ROUNDS = [{ name: "Round 1", sub: "Normal points", mult: 1 }, { name: "Round 2", sub: "Double points!", mult: 2 }, { name: "The silly round", sub: "Silly prompts · double points", mult: 2, silly: true }];
 const DJ_SITE = "https://lucavanruiten.github.io/DRINKING/";
 // Avatars (images/avatars/*.png, cut-outs on transparent backgrounds). Each player gets their own while there are free ones.
@@ -6149,7 +6187,8 @@ function djRoom(h) {
 
 function makeDJ() {
   const s = { phase: "lobby", ri: -1, parts: [], prompts: [], order: [], mi: 0, flip: 0, cur: 0, endsAt: 0, loading: false, votes: {}, res: null,
-    score: {}, delta: {}, bagN: [], bagS: [], found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0, seq: 0 };
+    score: {}, delta: {}, bagN: [], bagS: [], bagP: [], found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0, seq: 0,
+    cfg: djCfg(), tab: "join", named: {}, customLeft: null };
   let room = null;
   const online = (x) => !!(room && room.conns.has(x));
   const all = () => (room ? room.names() : []); // everyone who joined, in joining order
@@ -6223,7 +6262,19 @@ function makeDJ() {
     const o = shuffleArr(parts.slice()), N = o.length;
     s.parts = o.slice();
     // Every prompt goes to two neighbours in a shuffled circle, so everyone gets exactly two prompts and two different rivals.
-    s.prompts = o.map((_, j) => ({ text: fromBag(RD().silly ? "bagS" : "bagN", RD().silly ? DJ_SILLY : DJ_PROMPTS), authors: [o[j], o[(j + 1) % N]], songs: [null, null], safety: [false, false] }));
+    s.prompts = o.map((_, j) => ({ text: "", authors: [o[j], o[(j + 1) % N]], songs: [null, null], safety: [false, false] }));
+    // About a third of the prompts name someone (Settings), and custom prompts go first. A named player is never answering that prompt,
+    // and whoever has been named least so far is next.
+    if (!s.customLeft) s.customLeft = shuffleArr(s.cfg.custom.slice());
+    const named = new Set(s.cfg.names ? shuffleArr(o.map((_, j) => j)).slice(0, Math.max(1, Math.round(N / 3))) : []);
+    const about = (pr) => {
+      const c = shuffleArr(o.filter((x) => !pr.authors.includes(x))).sort((a, b) => (s.named[a] || 0) - (s.named[b] || 0))[0];
+      s.named[c] = (s.named[c] || 0) + 1; return c;
+    };
+    s.prompts.forEach((pr, j) => {
+      const q = named.has(j) ? fromBag("bagP", DJ_NAMED) : s.customLeft.length ? s.customLeft.pop() : fromBag(RD().silly ? "bagS" : "bagN", RD().silly ? DJ_SILLY : DJ_PROMPTS);
+      pr.text = /\{name\}/i.test(q) ? djFill(q, about(pr)) : q;
+    });
     s.parts.forEach((x) => { if (s.score[x] == null) s.score[x] = 0; });
     s.delta = {}; s.found = {}; s.board = null; s.endsAt = 0; s.phase = "intro";
     [262, 330, 392, 523].forEach((f, j) => tone(f, 0.2, "sawtooth", 0.05, j * 0.12));
@@ -6232,7 +6283,7 @@ function makeDJ() {
     setTimeout(() => { if (G === g && s.phase === "intro" && s.gen === gen) startAnswer(); }, 4000);
   }
   function startAnswer() {
-    s.phase = "answer"; s.endsAt = Date.now() + DJ_ANSWER * 1000;
+    s.phase = "answer"; s.endsAt = Date.now() + s.cfg.answer * 1000;
     sweep(300, 900, 0.35, "sawtooth", 0.03);
     paint(); sync();
   }
@@ -6262,7 +6313,7 @@ function makeDJ() {
     a.pause(); a.src = t.preview; a.volume = 1;
     a.play().then(() => {
       if (G !== g || s.phase !== "show" || s.cur !== cur || s.mi !== mi) return;
-      s.loading = false; s.endsAt = Date.now() + DJ_CLIP * 1000; paint(); sync();
+      s.loading = false; s.endsAt = Date.now() + s.cfg.clip * 1000; paint(); sync();
       if (cur === 0) { const nx = curPr().songs[disp()[1]]; if (nx) new Audio(nx.preview).preload = "auto"; } // warm up song B
     }).catch(() => {
       if (G !== g || s.phase !== "show") return;
@@ -6377,20 +6428,22 @@ function makeDJ() {
             : err ? `<p class="error" style="text-align:left">${esc(err)}</p><button class="btn" data-a="reopen">Try again</button>` : `<p class="big-msg">Opening the room…</p>`}
         </div></div>
         ${names.length ? `<div class="dj-crowd">${names.map((x, i) => `<button class="${online(x) ? "" : "off"}" data-a="kick" data-i="${i}" title="Tap to remove">${djAv(avOf(x))}<span>${esc(x)}</span></button>`).join("")}</div>`
-          : `<div class="center"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${DJ_ANSWER} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`}`;
+          : `<div class="center"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${s.cfg.answer} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`}`;
+      if (s.tab === "set") main = settingsView();
+      main = `<div class="dj-tabs"><button class="${s.tab === "set" ? "" : "on"}" data-a="tab" data-v="join">📱 Join</button><button class="${s.tab === "set" ? "on" : ""}" data-a="tab" data-v="set">⚙️ Settings</button></div>` + main;
       side = `<div class="section"><p class="label">Who's in · ${cnt} ${cnt === 1 ? "phone" : "phones"}</p>
           ${names.length ? `<p class="note">Everyone joins on their own phone with a name and an avatar. Tap someone to remove them. Faded = phone not connected.</p>` : `<p class="sub">Nobody yet. Scan the QR code to join!</p>`}</div>
-        <p class="note">🔊 The songs play from this laptop as 30-second previews. No Spotify or accounts needed, just turn the volume up.</p>
+        <p class="note">🔊 The songs play from this laptop: ${s.cfg.clip} seconds each, and everyone gets ${s.cfg.answer} seconds to pick${s.cfg.names ? ". Player names in prompts are on 😈" : ""}. No Spotify or accounts needed, just turn the volume up.</p>
         ${s.err && code ? `<p class="error">${esc(s.err)}</p>` : ""}
         <button class="btn primary pass-btn" data-a="start"${cnt >= 3 ? "" : " disabled"}>${cnt >= 3 ? "🎧 Start round 1" : `Waiting for phones (${cnt}/3)`}</button>`;
     } else if (s.phase === "intro") {
-      main = `<div class="dj-round"><small>${esc(RD().name)}</small><b>${esc(RD().sub)}</b><p>📱 Check your phone: you've got 2 prompts and ${DJ_ANSWER} seconds.</p></div>`;
+      main = `<div class="dj-round"><small>${esc(RD().name)}</small><b>${esc(RD().sub)}</b><p>📱 Check your phone: you've got 2 prompts and ${s.cfg.answer} seconds.</p></div>`;
       side = `<div class="dg-status">${roundChip()}</div><button class="btn primary" data-a="go">Go now →</button>${mini()}`;
     } else if (s.phase === "answer" || s.phase === "filling") {
       const done = s.parts.filter(doneAll).length;
       main = `<div class="dj-round small"><small>${esc(RD().name)} · ${esc(RD().sub)}</small><b>${s.phase === "filling" ? "Time's up! 🐌" : "Pick your songs!"}</b>
           <p>${s.phase === "filling" ? "Handing out safety songs to the slowpokes…" : "Two prompts each, on your phone. Funny and original wins."}</p></div>
-        <div class="dj-clock"><b id="djClock">${s.phase === "filling" ? "0" : DJ_ANSWER}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>
+        <div class="dj-clock"><b id="djClock">${s.phase === "filling" ? "0" : s.cfg.answer}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>
         <div class="dj-roster big">${s.parts.map((x) => { const n = mine(x).filter(({ j, slot }) => s.prompts[j].songs[slot]).length; return `<span class="dj-who ${n === 2 ? "on" : ""}">${djAv(avOf(x), 30)}${esc(x)} ${n === 2 ? "✅" : n + "/2"}</span>`; }).join("")}</div>`;
       side = `<div class="dg-status">${roundChip()}<span class="chip">${done}/${s.parts.length} done</span></div>
         ${s.phase === "answer" ? `<button class="btn" data-a="endanswer">⏩ End the timer now</button>` : ""}${mini()}`;
@@ -6399,7 +6452,7 @@ function makeDJ() {
       main = `<div class="dj-theme"><small>${esc(RD().name)} · matchup ${s.mi + 1} of ${s.order.length}</small><b>${esc(pr.text)}</b></div>
         <div class="dj-res">${songCard(0, s.phase)}${songCard(1, s.phase)}</div>`;
       if (s.phase === "show") {
-        main += `<div class="dj-clock"><b id="djClock">${s.loading ? "…" : "0:" + DJ_CLIP}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>`;
+        main += `<div class="dj-clock"><b id="djClock">${s.loading ? "…" : "0:" + String(s.cfg.clip).padStart(2, "0")}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>`;
         side = `<div class="dg-status">${roundChip()}<span class="chip">▶ Song ${L(s.cur)}</span></div>
           ${s.err ? `<p class="error" style="text-align:left">${esc(s.err)}</p><button class="btn primary" data-a="retry">Try again</button>` : ""}
           <button class="btn" data-a="skip"${s.loading ? " disabled" : ""}>⏭ ${s.cur === 0 ? "Skip to song B" : "Skip to the vote"}</button>${mini()}`;
@@ -6428,8 +6481,25 @@ function makeDJ() {
         ${fin ? `<button class="btn primary pass-btn" data-a="again">🔁 Play again</button>`
           : `<button class="btn${b.first && !b.given ? "" : " primary"} pass-btn" data-a="nextround">Next: ${esc(DJ_ROUNDS[s.ri + 1].name)} →</button>`}`;
     }
+    // Phones joining repaint the lobby, so keep whatever the host is typing in the custom prompt field.
+    const ci = $("#djCustIn"), keep = ci && { v: ci.value, f: document.activeElement === ci, at: ci.selectionStart };
     R(`<div class="gl"><div class="gl-main">${main}</div><div class="gl-side">${side}</div></div>`);
+    const ni = $("#djCustIn");
+    if (ni && keep) { ni.value = keep.v; if (keep.f) { ni.focus(); ni.setSelectionRange(keep.at, keep.at); } }
     clock();
+  }
+  function settingsView() {
+    const c = s.cfg, opt = (k, [v, sub], suf) => `<button class="opt${c[k === "clip" ? "clip" : "answer"] === v ? " on" : ""}" data-a="${k}" data-v="${v}"><strong>${v}${suf}</strong><span>${sub}</span></button>`;
+    return `<div class="dj-set">
+      <div class="section"><p class="label">How long does each song play?</p><div class="options heat four">${DJ_CLIPS.map((o) => opt("clip", o, "s")).join("")}</div></div>
+      <div class="section"><p class="label">Time to pick songs</p><div class="options heat three">${DJ_ANSWERS.map((o) => opt("ans", o, "s")).join("")}</div></div>
+      <div class="section"><div class="toggle"><div><strong>Player names in prompts 😈</strong><span>About 1 in 3 prompts are about someone in the room, like "${esc(djFill(DJ_NAMED[0], all()[0] || "Luca"))}". Never about the two people answering it.</span></div>
+        <button class="switch" role="switch" aria-checked="${c.names}" data-a="names"></button></div></div>
+      <div class="section"><p class="label">Your own prompts · ${c.custom.length}</p>
+        <div class="player-row"><input type="text" id="djCustIn" data-enter="addq" placeholder="e.g. The song that plays when {name} gets home" maxlength="120"><button class="btn primary" data-a="addq">Add</button></div>
+        <p class="note">They're used first, mixed in with the built-in ones, and saved on this laptop. Write <b>{name}</b> to drop in a random player (never one of the two answering).</p>
+        ${c.custom.length ? `<ul class="dj-cust">${c.custom.map((q, i) => `<li><span>${esc(q)}</span><button data-a="delq" data-i="${i}" title="Delete">✕</button></li>`).join("")}</ul>` : ""}</div>
+    </div>`;
   }
   function tick() {
     const now = Date.now();
@@ -6441,7 +6511,7 @@ function makeDJ() {
   function clock() {
     const c = $("#djClock");
     if (!c || !s.endsAt) return;
-    const total = s.phase === "vote" ? DJ_VOTE : s.phase === "answer" ? DJ_ANSWER : DJ_CLIP, left = Math.max(0, (s.endsAt - Date.now()) / 1000), sec = Math.ceil(left);
+    const total = s.phase === "vote" ? DJ_VOTE : s.phase === "answer" ? s.cfg.answer : s.cfg.clip, left = Math.max(0, (s.endsAt - Date.now()) / 1000), sec = Math.ceil(left);
     c.textContent = s.phase === "show" ? "0:" + String(sec).padStart(2, "0") : sec;
     if (s.phase === "show") djAudio.volume = Math.max(0, Math.min(1, left / 1.2)); // fade out at the end
     $("#djBar").style.width = (left / total) * 100 + "%";
@@ -6473,7 +6543,23 @@ function makeDJ() {
       if (a === "give") return giveSips(s.board.first, 2, all(), () => { s.board.given = true; paint(); });
       if (a === "kick") { const x = all()[+el.dataset.i]; if (x && s.phase === "lobby" && confirm(`Remove ${x} from the game?`)) room.kick(x); return; }
       if (a === "nextround") return startRound();
-      if (a === "again") { s.ri = -1; s.score = {}; s.delta = {}; s.phase = "lobby"; paint(); return sync(); }
+      if (a === "again") { s.ri = -1; s.score = {}; s.delta = {}; s.named = {}; s.customLeft = null; s.phase = "lobby"; paint(); return sync(); }
+      // ⚙️ Settings (lobby only). Saved on this laptop straight away.
+      if (s.phase !== "lobby") return;
+      const save = () => { saveJ(DJ_CFG_KEY, s.cfg); s.customLeft = null; paint(); };
+      if (a === "tab") { s.tab = el.dataset.v; return paint(); }
+      if (a === "clip") { s.cfg.clip = +el.dataset.v; return save(); }
+      if (a === "ans") { s.cfg.answer = +el.dataset.v; return save(); }
+      if (a === "names") { s.cfg.names = !s.cfg.names; return save(); }
+      if (a === "addq") {
+        const inp = $("#djCustIn"), q = inp ? inp.value.trim().replace(/\s+/g, " ").slice(0, 120) : "";
+        if (!q) return inp && inp.focus();
+        if (!s.cfg.custom.some((x) => x.toLowerCase() === q.toLowerCase())) s.cfg.custom.unshift(q);
+        inp.value = ""; save(); tone(880, 0.06, "triangle", 0.08);
+        const n = $("#djCustIn"); if (n) n.focus();
+        return;
+      }
+      if (a === "delq") { s.cfg.custom.splice(+el.dataset.i, 1); return save(); }
     }
   };
   return g;
