@@ -6013,7 +6013,22 @@ const DJ_PROMPTS = [
   "The 7th beer", "When someone leaves the group chat", "Your own roast", "What your grandma twerks to", "Background music for a job interview",
   "The anthem of people who reply-all", "A hungover Sunday", "Someone who just lost all their crypto", "When the Tikkie comes in",
   "The first dance at a divorce party", "The song that plays when you finally poop after 3 days", "Getting dumped over text",
-  "A driving test you're definitely failing", "The bouncer says 'not tonight'", "Your search history, as a song"
+  "A driving test you're definitely failing", "The bouncer says 'not tonight'", "Your search history, as a song",
+  // Added by Luca
+  "Hold music at the Belastingdienst", "Realising you've been unmuted the whole meeting",
+  "Waving back at someone who wasn't waving at you", "The song that plays when the lights come on at the end of the night",
+  "Your phone is on 1% and you have no idea where you are", "Accidentally liking your ex's photo from 2017",
+  "Saying “you too” when the waiter says “enjoy your meal”", "The third cancelled NS train in a row",
+  "Your bike getting stolen for the fourth time", "Hiding from a colleague behind the cereal at the supermarket",
+  "When the Uber driver really wants to talk", "Being the only sober person at 2 AM",
+  "The moment you realise it's Thursday, not Friday", "Accidentally sending a voice note of yourself singing",
+  "Opening the bill after a “small” birthday dinner", "Sprinting for the last train and watching the doors close",
+  "A LinkedIn post about what your breakup taught you about B2B sales", "When the hairdresser asks “so, do you like it?”",
+  "The song your Spotify Wrapped is lying about", "Explaining crypto to your grandma", "Your sleep paralysis demon's playlist",
+  "Cycling home with the rain going sideways", "Realising you're the oldest person in the club",
+  "The airline lost your suitcase, but not your return flight", "Stuck in a lift with your boss for 40 minutes",
+  "Confidently correcting someone and being wrong", "A group project where you did everything",
+  "Unexpected item in the bagging area", "Building IKEA furniture with your partner on day three", "Your landlord's ringtone"
 ];
 // Round 3: the silly round.
 const DJ_SILLY = [
@@ -6025,7 +6040,16 @@ const DJ_SILLY = [
   "A snail's 100-metre sprint", "The anthem of the Smurf rebellion", "A duck's TED talk", "A tulip being picked", "What God plays on shuffle",
   "Your houseplant's motivational playlist", "A frog's boxing debut", "A kebab on its way to your stomach", "The breakup of two magnets",
   "Disco night for dinosaurs", "A raccoon robbing a bin", "A penguin's first day at the office", "A sheep that can't fall asleep",
-  "The ice-cream truck in the apocalypse", "A horse doing its taxes", "Two Roombas falling in love"
+  "The ice-cream truck in the apocalypse", "A horse doing its taxes", "Two Roombas falling in love",
+  // Added by Luca
+  "A Dutch cyclist meeting their first hill", "What the moon plays when nobody's looking", "A lighthouse that's afraid of the dark",
+  "A traffic cone's retirement party", "A banana going brown in slow motion", "An octopus trying on gloves",
+  "What a toaster dreams about", "A raw herring meeting the onions", "A jellyfish at a job interview",
+  "A windmill that's had enough", "A Gouda being judged at the cheese market", "A cloud trying to rain on one specific person",
+  "A hedgehog taking hugging lessons", "The last crisp in the bag", "A bee filing a complaint against a flower",
+  "An escalator having an existential crisis", "A sloth's gym playlist", "A tortoise's midlife crisis",
+  "What a goldfish listens to (and forgets 3 seconds later)", "A garden gnome making its escape", "A flamingo with a leg cramp",
+  "A Lego brick waiting for a bare foot", "The kettle 10 seconds before it boils"
 ];
 // Played for anyone who runs out of time: famously silly songs, found with a Spotify search.
 const DJ_SAFETY = [
@@ -6034,6 +6058,7 @@ const DJ_SAFETY = [
   "Blue (Da Ba Dee) Eiffel 65", "Baby Shark Pinkfong", "Chicken Song J.J. Lionel", "Ievan Polkka", "The Final Countdown Europe", "Trololo Eduard Khil",
   "Gummy Bear Song", "Ik heb een toeter op mijn waterscooter", "Cha Cha Slide", "Mr. Saxobeat Alexandra Stan"
 ];
+const DJ_SEEN = new Set();
 // Prompts about someone in the room (Settings → player names). {name} is never one of the two players answering it.
 const DJ_NAMED = [
   "The song playing at {name}'s birthday party", "{name}'s walk-out song at their own wedding", "What {name} sings in the shower", "What {name} plays on repeat after a breakup",
@@ -6044,7 +6069,19 @@ const DJ_NAMED = [
   "The national anthem of {name}'s group chat", "What {name} hums on the toilet", "{name}'s entrance music as a pro wrestler", "A song that describes {name}'s cooking",
   "{name} coming home at 5 AM", "The soundtrack of {name}'s biopic", "What {name} puts on to start the party (and it doesn't work)", "{name}'s gym playlist (they go twice a year)",
   "{name} on holiday in Sunny Beach", "What {name}'s ex is listening to right now", "The song {name} would get tattooed on their body", "{name}'s villain origin story",
-  "The last song {name} heard before getting dumped", "{name} when the Tikkie comes in"
+  "The last song {name} heard before getting dumped", "{name} when the Tikkie comes in",
+  // Added by Luca
+  "{name}'s alarm clock", "What {name} plays while pretending to be productive",
+  "{name}'s Spotify Wrapped number one (that they'll deny)", "{name} trying to parallel park",
+  "{name} pitching their “business idea” at a birthday party", "{name}'s hold music if they were a company",
+  "What {name} plays to impress someone's parents", "{name}'s reality show audition tape",
+  "The song {name} sings to their pet when nobody's home", "{name} after one sip of wine",
+  "{name}'s campaign song for prime minister", "{name} pretending to understand wine",
+  "{name} back from a “life-changing” trip to Bali", "{name}'s 4 AM voice memo to themselves",
+  "{name} as a substitute teacher on the first day", "{name} selling their old junk on Koningsdag",
+  "{name} reading the terms and conditions (they've never done this)", "What plays when {name} joins a group project",
+  "{name} trying to do a TikTok dance", "{name}'s audition for a boyband",
+  "The song playing as {name} gets stopped at airport security", "{name} explaining the offside rule (wrongly)"
 ];
 const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15; // defaults; the host can change clip and answer time in ⚙️ Settings
 const DJ_CLIPS = [[10, "Speed run"], [15, "Default"], [20, "A bit longer"], [30, "Full preview"]], DJ_ANSWERS = [[60, "Default"], [90, "Relaxed"], [120, "Very drunk"]];
@@ -6313,14 +6350,23 @@ function djRoom(h) {
 
 function makeDJ() {
   const s = { phase: "lobby", ri: -1, parts: [], prompts: [], order: [], mi: 0, flip: 0, cur: 0, endsAt: 0, loading: false, votes: {}, res: null,
-    score: {}, delta: {}, bagN: [], bagS: [], bagP: [], found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0, seq: 0,
+    score: {}, delta: {}, bagN: [], bagS: [], bagP: [], usedQ: new Set(), found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0, seq: 0,
     cfg: djCfg(), tab: "join", named: {}, customLeft: null };
   let room = null;
   const online = (x) => !!(room && room.conns.has(x));
   const all = () => (room ? room.names() : []); // everyone who joined, in joining order
   const avOf = (x) => (room ? room.avOf(x) : -1);
   const RD = () => DJ_ROUNDS[s.ri];
-  const fromBag = (key, list) => { if (!s[key].length) s[key] = shuffleArr(list.slice()); return s[key].pop(); };
+  // Prompts come from a shuffled deck. Prompts already used since the page loaded (DJ_SEEN) only come back once the whole list has been played.
+  const fromBag = (key, list) => {
+    if (!s[key].length) {
+      let fresh = list.filter((q) => !DJ_SEEN.has(q));
+      if (!fresh.length) { list.forEach((q) => DJ_SEEN.delete(q)); fresh = list.slice(); }
+      // After a full reshuffle, this game's prompts go to the bottom of the deck.
+      s[key] = shuffleArr(fresh).sort((a, b) => s.usedQ.has(b) - s.usedQ.has(a));
+    }
+    const q = s[key].pop(); DJ_SEEN.add(q); s.usedQ.add(q); return q;
+  };
   // A player's two prompts: [{ j: prompt index, slot: 0 or 1 }].
   const mine = (x) => s.prompts.map((pr, j) => ({ j, slot: pr.authors.indexOf(x) })).filter((m) => m.slot >= 0);
   const doneAll = (x) => mine(x).every(({ j, slot }) => s.prompts[j].songs[slot]);
@@ -6672,7 +6718,7 @@ function makeDJ() {
       if (a === "give") return giveSips(s.board.first, 2, all(), () => { s.board.given = true; paint(); });
       if (a === "kick") { const x = all()[+el.dataset.i]; if (x && s.phase === "lobby" && confirm(`Remove ${x} from the game?`)) room.kick(x); return; }
       if (a === "nextround") return startRound();
-      if (a === "again") { s.ri = -1; s.score = {}; s.delta = {}; s.named = {}; s.customLeft = null; s.phase = "lobby"; paint(); return sync(); }
+      if (a === "again") { s.ri = -1; s.score = {}; s.delta = {}; s.named = {}; s.customLeft = null; s.bagN = []; s.bagS = []; s.bagP = []; s.usedQ = new Set(); s.phase = "lobby"; paint(); return sync(); }
       // ⚙️ Settings (lobby only). Saved on this laptop straight away.
       if (s.phase !== "lobby") return;
       const save = () => { saveJ(DJ_CFG_KEY, s.cfg); s.customLeft = null; paint(); };
