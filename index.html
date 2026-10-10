@@ -5919,8 +5919,9 @@ function makeKing(p) {
 
 /* ============================================================
    DJ DUEL: two DJs secretly pick a song for a theme, the room votes live on their phones.
-   The laptop hosts a room over WebRTC (PeerJS; its free public server only introduces the devices) and does all the
-   Spotify work. Phones join with a 4-letter code or the QR code, search through the laptop, pick and vote.
+   The laptop and the phones talk through free public MQTT relays over secure WebSockets (no direct device-to-device link,
+   so routers and phone networks can't block it). The laptop does all the Spotify work; phones join with a 4-letter code
+   or the QR code, search through the laptop, pick and vote.
    ============================================================ */
 // Prompts for rounds 1 and 2. The goal is the funniest or most original song, not the "best" one.
 const DJ_PROMPTS = [
@@ -5962,7 +5963,7 @@ const DJ_SAFETY = [
 const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15;
 const DJ_ROUNDS = [{ name: "Round 1", sub: "Normal points", mult: 1 }, { name: "Round 2", sub: "Double points!", mult: 2 }, { name: "The silly round", sub: "Silly prompts · double points", mult: 2, silly: true }];
 const DJ_SITE = "https://lucavanruiten.github.io/DRINKING/";
-const DJ_LIBS = { peer: "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js", qr: "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" };
+const DJ_LIBS = { mqtt: "https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js", qr: "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" };
 const libP = {};
 // Load a library on demand (only DJ Duel needs these), once.
 function loadLib(k) {
@@ -5973,7 +5974,11 @@ function loadLib(k) {
   }));
 }
 const DJ_ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-const djPeerId = (code) => "ministry-slokjes-dj-" + code.toLowerCase();
+// Public relays, tried in this order. The laptop joins all of them; a phone uses the first one where it finds the laptop.
+const DJ_BROKERS = ["wss://broker.emqx.io:8084/mqtt", "wss://broker.hivemq.com:8884/mqtt", "wss://test.mosquitto.org:8081/mqtt"];
+const djTopic = (code) => "ministry-slokjes-uitdelen/dj/v1/" + code;
+const djUid = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, "0")).join("");
+const djParse = (payload) => { try { const s = new TextDecoder().decode(payload); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
 const djOnline = () => location.protocol === "https:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname);
 const djBase = () => (djOnline() ? location.origin + location.pathname.replace(/index\.html$/, "") : DJ_SITE);
 const djSafeImg = (u) => (/^https:\/\/[a-z0-9.-]+\.(scdn\.co|spotifycdn\.com)\//i.test(u || "") ? u : "");
@@ -5984,47 +5989,70 @@ function djTrackBtn(t, attr, on) {
 }
 
 // The laptop's side of the live link. Phones say hello with a name from the guest list; one phone per name.
+// Topics: <room>/host (retained "the room is open"), <room>/up/<phoneId> (phone → laptop), <room>/down/<phoneId> (laptop → phone).
 function djRoom(h) {
-  const room = { code: "", status: "starting", err: "", conns: new Map(), peer: null, dead: false };
-  const names = (conn) => conn.open && conn.send({ t: "names", names: h.names(), taken: [...room.conns.keys()] });
-  function open() {
-    room.code = Array.from({ length: 4 }, () => DJ_ALPH[rand(DJ_ALPH.length)]).join("");
-    const peer = new Peer(djPeerId(room.code), { debug: 0 });
-    room.peer = peer;
-    peer.on("open", () => { room.status = "open"; room.err = ""; h.change(); });
-    peer.on("error", (e) => {
-      if (room.dead || room.peer !== peer) return;
-      if (e.type === "unavailable-id") { peer.destroy(); return open(); } // code already in use somewhere: roll a new one
-      if (e.type === "peer-unavailable") return;
-      if (room.status !== "open") { room.err = "The live link couldn't start (" + (e.type || e.message) + ")."; h.change(); }
-    });
-    peer.on("disconnected", () => setTimeout(() => { if (!room.dead && !peer.destroyed && peer.disconnected) peer.reconnect(); }, 1500));
-    peer.on("connection", (conn) => {
-      conn.on("open", () => names(conn));
-      conn.on("data", (d) => {
-        if (room.dead || !d || typeof d !== "object") return;
-        if (d.t === "hello") {
-          const name = String(d.name || "");
-          if (!h.names().includes(name)) return names(conn);
-          const old = room.conns.get(name);
-          if (old && old !== conn) { old._name = null; try { old.close(); } catch (e) {} }
-          conn._name = name; room.conns.set(name, conn); h.join(name);
-          return;
-        }
-        if (conn._name && room.conns.get(conn._name) === conn) h.msg(conn._name, d);
-      });
-      conn.on("close", () => { if (conn._name && room.conns.get(conn._name) === conn) { room.conns.delete(conn._name); h.change(); } });
-    });
+  const room = { code: "", status: "starting", err: "", conns: new Map() /* name → phoneId */, seen: new Map() /* phoneId → { name, t } */, clients: [], dead: false };
+  room.code = Array.from({ length: 4 }, () => DJ_ALPH[rand(DJ_ALPH.length)]).join("");
+  const T = djTopic(room.code);
+  const pub = (topic, msg, retain = false) => room.clients.forEach((c) => { if (c.connected) c.publish(topic, msg == null ? "" : JSON.stringify(msg), { qos: 0, retain }); });
+  const to = (id, msg) => pub(T + "/down/" + id, msg);
+  const names = (id) => to(id, { t: "names", names: h.names(), taken: [...room.conns.keys()] });
+  function drop(id) {
+    const x = room.seen.get(id); room.seen.delete(id);
+    if (x && x.name && room.conns.get(x.name) === id) { room.conns.delete(x.name); h.change(); }
   }
-  room.send = (name, msg) => { const c = room.conns.get(name); if (c && c.open) try { c.send(msg); } catch (e) {} };
-  room.close = () => { room.dead = true; if (room.peer) try { room.peer.destroy(); } catch (e) {} };
-  open();
+  function onMsg(topic, payload) {
+    if (room.dead || !topic.startsWith(T + "/up/")) return;
+    const id = topic.slice(T.length + 4), d = djParse(payload);
+    if (!d || typeof d !== "object" || !/^[0-9a-f]{12}$/.test(id)) return;
+    const me = room.seen.get(id) || { name: null, t: 0 };
+    me.t = Date.now(); room.seen.set(id, me);
+    if (d.t === "bye") return drop(id);
+    if (d.t === "hi" || d.t === "ping") {
+      if (d.t === "hi") names(id);
+      if (me.name && room.conns.get(me.name) !== id) { me.name = null; to(id, { t: "kicked" }); } // someone else took this name since
+      else if (me.name && d.t === "ping") h.ping(me.name); // the relays may drop a message now and then: every ping gets the current state
+      return;
+    }
+    if (d.t === "hello") {
+      const name = String(d.name || "");
+      if (!h.names().includes(name)) return names(id);
+      const old = room.conns.get(name);
+      if (old && old !== id) { const o = room.seen.get(old); if (o) o.name = null; to(old, { t: "kicked" }); }
+      me.name = name; room.conns.set(name, id); h.join(name);
+      return;
+    }
+    if (me.name && room.conns.get(me.name) === id) h.msg(me.name, d);
+  }
+  DJ_BROKERS.forEach((url) => {
+    const c = mqtt.connect(url, { clientId: "msu-host-" + djUid(), keepalive: 20, reconnectPeriod: 3000, connectTimeout: 8000, clean: true,
+      will: { topic: T + "/host", payload: "", qos: 0, retain: true } });
+    room.clients.push(c);
+    c.on("connect", () => {
+      if (room.dead) return c.end(true);
+      c.subscribe(T + "/up/+", { qos: 0 });
+      c.publish(T + "/host", JSON.stringify({ t: "open", at: Date.now() }), { qos: 0, retain: true });
+      if (room.status !== "open") { room.status = "open"; room.err = ""; h.change(); }
+    });
+    c.on("message", onMsg);
+    c.on("error", () => {});
+  });
+  // Nobody connected after a while: say so (the clients keep retrying in the background).
+  setTimeout(() => { if (!room.dead && room.status !== "open") { room.err = "Can't reach the live link servers. Check the laptop's internet connection."; h.change(); } }, 9000);
+  // Phones ping every 10 s; drop the ones that went quiet.
+  room.sweep = setInterval(() => { const now = Date.now(); for (const [id, x] of room.seen) if (now - x.t > 35000) drop(id); }, 5000);
+  room.send = (name, msg) => { const id = room.conns.get(name); if (id) to(id, msg); };
+  room.close = () => {
+    if (room.dead) return;
+    room.dead = true; clearInterval(room.sweep);
+    room.clients.forEach((c) => { try { if (c.connected) c.publish(T + "/host", "", { qos: 0, retain: true }, () => c.end()); else c.end(true); } catch (e) {} });
+  };
   return room;
 }
 
 function makeDJ(p) {
   const s = { phase: "lobby", ri: -1, parts: [], prompts: [], order: [], mi: 0, flip: 0, cur: 0, endsAt: 0, loading: false, votes: {}, res: null,
-    score: {}, delta: {}, bagN: [], bagS: [], found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0 };
+    score: {}, delta: {}, bagN: [], bagS: [], found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0, seq: 0 };
   let room = null;
   const online = (x) => !!(room && room.conns.has(x));
   const RD = () => DJ_ROUNDS[s.ri];
@@ -6041,7 +6069,7 @@ function makeDJ(p) {
 
   // What one phone gets to know. Who picked which song stays secret until the reveal.
   function stFor(x) {
-    const st = { t: "state", phase: s.phase, ri: s.ri, round: s.ri >= 0 ? RD().name : "", sub: s.ri >= 0 ? RD().sub : "", gen: s.gen,
+    const st = { t: "state", seq: s.seq, phase: s.phase, ri: s.ri, round: s.ri >= 0 ? RD().name : "", sub: s.ri >= 0 ? RD().sub : "", gen: s.gen,
       left: s.endsAt ? Math.max(0, (s.endsAt - Date.now()) / 1000) : 0, inGame: s.parts.includes(x), err: s.err };
     if (s.phase === "answer" || s.phase === "filling") {
       st.mine = mine(x).map(({ j, slot }) => ({ text: s.prompts[j].text, pick: pub(s.prompts[j].songs[slot]) }));
@@ -6055,15 +6083,21 @@ function makeDJ(p) {
     if (s.phase === "board" || s.phase === "final") st.board = s.board;
     return st;
   }
-  function sync() { if (room) for (const x of room.conns.keys()) room.send(x, stFor(x)); }
+  // Changes that happen together go out as one update per phone (the public relays don't like bursts).
+  let syncT = 0;
+  function sync() {
+    if (syncT) return;
+    syncT = setTimeout(() => { syncT = 0; s.seq++; if (room && G === g) for (const x of room.conns.keys()) room.send(x, stFor(x)); }, 80);
+  }
   function openRoom() {
     s.err = "";
-    loadLib("peer").then(() => {
+    loadLib("mqtt").then(() => {
       if (G !== g) return;
       room = djRoom({
         names: () => p,
         join: (x) => { tone(880, 0.06, "triangle", 0.08); tone(1320, 0.08, "triangle", 0.06, 0.06); room.send(x, stFor(x)); paint(); },
         change: () => paint(),
+        ping: (x) => room.send(x, stFor(x)),
         msg: onMsg
       });
     }).catch((e) => { s.err = e.message; paint(); });
@@ -6343,52 +6377,93 @@ function makeDJ(p) {
 
 /* ---------- DJ Duel: the phone side ---------- */
 const DJP_KEY = "kletspotje:dj-me";
-const DJP = { peer: null, conn: null, code: "", name: "", names: [], taken: [], st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
+const DJP = { client: null, id: "", T: "", run: 0, ping: null, code: "", name: "", names: [], taken: [], st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
 function djpJoin(code) {
   code = String(code).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
   const me = loadJ(DJP_KEY);
-  Object.assign(DJP, { code, name: me && me.code === code ? me.name : "", st: null, found: null, q: "", err: "", searching: false, edit: null });
+  Object.assign(DJP, { code, name: me && me.code === code ? me.name : "", key: "", st: null, found: null, q: "", err: "", searching: false, edit: null });
   $("#djpCode").textContent = code;
   Music.stop();
   show("djp"); djpConnect();
   clearInterval(DJP.timer); DJP.timer = setInterval(djpTick, 250);
 }
+// Find the laptop: try each relay until one has this room open, then stay there (mqtt.js reconnects by itself).
 function djpConnect() {
+  djpClose();
   DJP.status = "connecting"; djpRender();
-  loadLib("peer").then(() => {
-    if (DJP.peer) try { DJP.peer.destroy(); } catch (e) {}
-    const peer = new Peer({ debug: 0 }); DJP.peer = peer;
-    peer.on("open", () => {
-      const conn = peer.connect(djPeerId(DJP.code), { reliable: true, serialization: "json" }); DJP.conn = conn;
-      const to = setTimeout(() => { if (DJP.conn === conn && !conn.open) { DJP.status = "error"; DJP.err = "Couldn't reach the laptop. Being on the same Wi-Fi helps. Try again."; djpRender(); } }, 15000);
-      conn.on("open", () => { clearTimeout(to); DJP.status = "on"; DJP.err = ""; if (DJP.name) conn.send({ t: "hello", name: DJP.name }); djpRender(); });
-      conn.on("data", djpData);
-      conn.on("close", () => { if (DJP.conn === conn) { DJP.status = "lost"; djpRender(); } });
-    });
-    peer.on("error", (e) => {
-      if (DJP.peer !== peer) return;
-      DJP.status = "error";
-      DJP.err = e.type === "peer-unavailable" ? `There's no DJ Duel with code ${DJP.code} right now. Check the code on the laptop.` : "Connection problem (" + (e.type || e.message) + ").";
-      djpRender();
-    });
+  const run = ++DJP.run;
+  loadLib("mqtt").then(async () => {
+    const T = djTopic(DJP.code), id = djUid();
+    let reached = 0;
+    for (const url of DJ_BROKERS) {
+      if (run !== DJP.run) return;
+      const c = mqtt.connect(url, { clientId: "msu-phone-" + id, keepalive: 20, reconnectPeriod: 0, connectTimeout: 7000, clean: true,
+        will: { topic: T + "/up/" + id, payload: JSON.stringify({ t: "bye" }), qos: 0, retain: false } });
+      const found = await new Promise((res) => {
+        const done = (v) => { clearTimeout(tm); res(v); };
+        let tm = setTimeout(() => done(false), 7500);
+        c.on("error", () => done(false));
+        c.on("connect", () => {
+          reached++; clearTimeout(tm); tm = setTimeout(() => done(false), 3500); // the retained "open" message arrives straight away if the room exists
+          c.subscribe(T + "/host", { qos: 0 });
+        });
+        c.on("message", (topic, payload) => { if (topic === T + "/host") { const d = djParse(payload); done(!!(d && d.t === "open")); } });
+      });
+      if (run !== DJP.run) { c.end(true); return; }
+      if (!found) { c.end(true); continue; }
+      c.removeAllListeners("message"); c.removeAllListeners("error");
+      DJP.client = c; DJP.id = id; DJP.T = T;
+      c.options.reconnectPeriod = 2000;
+      const hello = () => {
+        c.subscribe([T + "/down/" + id, T + "/host"], { qos: 0 });
+        djpSend({ t: "hi" });
+        if (DJP.name) djpSend({ t: "hello", name: DJP.name });
+      };
+      c.on("message", (topic, payload) => {
+        const d = djParse(payload);
+        if (topic === T + "/host") { if (!d) { DJP.status = "lost"; DJP.err = "The laptop closed the room."; djpRender(); } return; }
+        djpData(d);
+      });
+      c.on("connect", () => { DJP.status = "on"; hello(); djpRender(); });
+      c.on("offline", () => { if (DJP.client === c && DJP.status === "on") { DJP.status = "reconnecting"; djpRender(); } });
+      c.on("error", () => {});
+      DJP.status = "on"; DJP.err = ""; hello(); djpRender();
+      clearInterval(DJP.ping); DJP.ping = setInterval(() => djpSend({ t: "ping" }), 5000);
+      return;
+    }
+    if (run !== DJP.run) return;
+    DJP.status = "error";
+    DJP.err = reached ? `There's no DJ Duel with code ${DJP.code} right now. Check the code on the laptop.` : "Couldn't reach the live link servers. Check your internet connection and try again.";
+    djpRender();
   }).catch((e) => { DJP.status = "error"; DJP.err = e.message; djpRender(); });
 }
+function djpClose() {
+  clearInterval(DJP.ping);
+  if (DJP.client) { const c = DJP.client; try { if (c.connected) c.publish(DJP.T + "/up/" + DJP.id, JSON.stringify({ t: "bye" }), { qos: 0 }, () => c.end()); else c.end(true); } catch (e) {} }
+  DJP.client = null;
+}
 function djpLeave() {
-  clearInterval(DJP.timer);
-  if (DJP.peer) try { DJP.peer.destroy(); } catch (e) {}
-  Object.assign(DJP, { peer: null, conn: null, st: null, status: "" });
+  clearInterval(DJP.timer); DJP.run++;
+  djpClose();
+  Object.assign(DJP, { st: null, status: "" });
   show("home");
 }
-const djpSend = (m) => { if (DJP.conn && DJP.conn.open) DJP.conn.send(m); };
+const djpSend = (m) => { const c = DJP.client; if (c && c.connected) c.publish(DJP.T + "/up/" + DJP.id, JSON.stringify(m), { qos: 0 }); };
 function djpData(d) {
   if (!d || typeof d !== "object") return;
+  if (d.t === "kicked") { DJP.name = ""; DJP.st = null; DJP.key = ""; saveJ(DJP_KEY, null); return djpRender(); }
   if (d.t === "names") {
     DJP.names = Array.isArray(d.names) ? d.names.map(String) : []; DJP.taken = Array.isArray(d.taken) ? d.taken.map(String) : [];
-    if (DJP.name && !DJP.names.includes(DJP.name)) { DJP.name = ""; DJP.st = null; }
+    if (DJP.name && !DJP.names.includes(DJP.name)) { DJP.name = ""; DJP.st = null; DJP.key = ""; }
     return djpRender();
   }
   if (d.t === "state") {
-    const prev = DJP.st; DJP.st = d; DJP.endsAt = d.left ? Date.now() + d.left * 1000 : 0;
+    if (DJP.st && d.seq < DJP.st.seq) return; // a late, older update
+    const key = JSON.stringify({ ...d, left: 0 });
+    DJP.endsAt = d.left ? Date.now() + d.left * 1000 : 0;
+    if (key === DJP.key) return; // the regular catch-up: nothing changed, so don't redraw
+    DJP.key = key;
+    const prev = DJP.st; DJP.st = d;
     if (!prev || prev.phase !== d.phase || prev.gen !== d.gen) {
       if (d.phase === "answer" && (!prev || prev.gen !== d.gen || prev.phase !== "answer")) Object.assign(DJP, { found: null, q: "", err: "", edit: null, searching: false });
       if (navigator.vibrate && ((d.phase === "answer" && d.inGame) || (d.phase === "vote" && d.m && d.m.author < 0))) navigator.vibrate([120, 60, 120]);
@@ -6414,6 +6489,7 @@ function djpRender() {
   const clockEl = `<div class="dj-clock"><b id="djpClock"></b></div>`;
   let h;
   if (DJP.status === "connecting") h = center("📡", "Connecting to the laptop…", "Hang on a second.");
+  else if (DJP.status === "reconnecting") h = center("📡", "Reconnecting…", "Lost the signal for a moment. Hang on.");
   else if (DJP.status !== "on") h = center("🔌", DJP.status === "lost" ? "Lost the connection" : "Couldn't connect", es(DJP.status === "lost" ? "The laptop closed the room, or your phone went to sleep." : DJP.err))
     + `<button class="btn primary" data-p="retry">Reconnect</button><button class="btn ghost" data-p="leave">Use a different code</button>`;
   else if (!DJP.name) h = center("🎧", "Who are you?", "Tap your name.")
@@ -6476,10 +6552,10 @@ function djpAct(a, el) {
   if (a === "me") {
     const name = DJP.names[+el.dataset.i]; if (!name) return;
     if (DJP.taken.includes(name) && !confirm(`${name} is already connected on another phone. Is this you?`)) return;
-    DJP.name = name; DJP.st = null; saveJ(DJP_KEY, { code: DJP.code, name });
+    DJP.name = name; DJP.st = null; DJP.key = ""; saveJ(DJP_KEY, { code: DJP.code, name });
     djpSend({ t: "hello", name }); return djpRender();
   }
-  if (a === "rename") { DJP.name = ""; DJP.st = null; saveJ(DJP_KEY, null); djpConnect(); return; }
+  if (a === "rename") { DJP.name = ""; DJP.st = null; DJP.key = ""; saveJ(DJP_KEY, null); djpConnect(); return; }
   if (a === "search") {
     const q = ($("#djpQ") || {}).value || DJP.q; DJP.q = q.trim(); if (!DJP.q) return;
     DJP.searching = true; DJP.err = ""; djpSend({ t: "search", q: DJP.q }); if (document.activeElement) document.activeElement.blur(); return djpRender();
@@ -6500,7 +6576,9 @@ $("#djpBody").addEventListener("click", (e) => { const el = e.target.closest("[d
 $("#djpExit").addEventListener("click", () => { if (confirm("Leave the DJ Duel?")) djpLeave(); });
 // Phones sleep and drop the link: reconnect as soon as the screen is back on.
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && $("#djp").classList.contains("active") && DJP.status !== "connecting" && !(DJP.conn && DJP.conn.open)) djpConnect();
+  if (document.hidden || !$("#djp").classList.contains("active") || DJP.status === "connecting") return;
+  if (DJP.client && DJP.client.connected) { djpSend({ t: "hi" }); if (DJP.name) djpSend({ t: "hello", name: DJP.name }); } // catch up on what we missed
+  else djpConnect();
 });
 
 show("home");
