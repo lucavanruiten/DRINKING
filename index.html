@@ -646,6 +646,107 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .king-card.hit { background: var(--accent-2); color: #fff; }
 .king-card.king { background: #ffcc33; color: #1a0f05; }
 
+/* ---------- DJ Duel ---------- */
+.dj-join { display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; background: var(--surface); border: 3px solid var(--ink); border-radius: 24px; padding: 22px; box-shadow: 6px 6px 0 var(--ink); rotate: -.6deg; }
+.dj-qr { width: min(46dvh, 420px); aspect-ratio: 1; background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 10px; display: grid; place-items: center; color: #222; font-weight: 700; rotate: 1.5deg; box-shadow: 4px 4px 0 var(--ink); }
+.dj-qr svg { width: 100%; height: 100%; display: block; }
+.dj-join .code { font-size: clamp(54px, 12dvh, 120px); padding: 12px 10px; margin: 6px 0; }
+.dj-url { font-family: var(--display); font-weight: 800; font-size: 19px; word-break: break-all; margin: 0; color: var(--accent-3); }
+.dj-roster { display: flex; flex-wrap: wrap; gap: 8px; }
+.dj-roster span { border: 2.5px solid var(--ink); border-radius: 99px; padding: 7px 12px; font-weight: 700; font-size: 14px; background: var(--surface-2); box-shadow: 0 3px 0 var(--ink); }
+.dj-roster span.on { background: #b8f135; color: #14110a; animation: slap .4s cubic-bezier(.2,1.4,.4,1); }
+.dj-roster span.dj { background: var(--accent-2); color: #fff; }
+.dj-theme { position: relative; text-align: center; background: var(--accent); color: var(--accent-ink); border: 3px solid var(--ink); border-radius: 20px; padding: 14px 18px; box-shadow: 6px 6px 0 var(--ink); rotate: -1deg; animation: slap .45s cubic-bezier(.2,1.4,.4,1); }
+.dj-theme small { font-family: var(--marker); font-size: 16px; display: block; }
+.dj-theme b { font-family: var(--fun); font-weight: 400; font-size: clamp(26px, 5.5dvh, 46px); line-height: 1.1; display: block; }
+.dj-theme .link { color: var(--accent-ink); }
+.dj-vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; }
+.dj-vsx { font-family: var(--fun); font-size: 46px; color: var(--accent-2); text-shadow: 4px 4px 0 var(--ink); rotate: -8deg; }
+.dj-card { text-align: center; background: var(--surface-2); border: 3px solid var(--ink); border-radius: 20px; padding: 18px 12px; box-shadow: 5px 5px 0 var(--ink); display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.dj-card:first-child { rotate: -1.5deg; } .dj-card:last-child { rotate: 1.5deg; }
+.dj-card .who { font-family: var(--fun); font-size: clamp(24px, 4.5dvh, 38px); line-height: 1.1; word-break: break-word; }
+.dj-card .st { font-weight: 700; color: var(--muted); }
+.dj-card.ready { background: #2b5a1a; } .dj-card.ready .st { color: #b8f135; }
+.dj-card .cr { font-size: 30px; line-height: 1; }
+.dj-deck { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: center; }
+.dj-rec { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: .45; transition: opacity .3s, transform .3s; }
+.dj-rec.on { opacity: 1; transform: scale(1.04); }
+.dj-rec.done { opacity: .75; }
+.dj-disc { width: min(100%, 40dvh, 340px); aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); display: grid; place-items: center;
+  background: repeating-radial-gradient(circle, #111 0 2px, #1d1d1d 2px 5px); position: relative; overflow: hidden; }
+.dj-disc::after { content: ""; position: absolute; inset: 0; background: conic-gradient(from 30deg, transparent 0 20%, rgba(255,255,255,.14) 25%, transparent 30% 70%, rgba(255,255,255,.1) 75%, transparent 80%); }
+.dj-rec.on .dj-disc { animation: spin 1.8s linear infinite; }
+.dj-label { width: 38%; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--ink); display: grid; place-items: center; font-family: var(--fun); font-size: clamp(34px, 7dvh, 64px); color: #fff; text-shadow: 3px 3px 0 var(--ink); z-index: 1; }
+.dj-rec.a .dj-label, .dj-ab.a { background: #ff2e88; } .dj-rec.b .dj-label, .dj-ab.b { background: #33a0ff; }
+.dj-label img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.dj-eq { display: flex; gap: 5px; align-items: flex-end; height: 46px; justify-content: center; }
+.dj-eq i { width: 9px; background: var(--accent); border: 2px solid var(--ink); border-radius: 4px; height: 15%; }
+.dj-rec.on .dj-eq i { animation: eq .45s ease-in-out infinite alternate; }
+.dj-clock { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.dj-clock b { font-family: var(--fun); font-weight: 400; font-size: clamp(44px, 9dvh, 84px); line-height: 1; color: var(--accent); text-shadow: 4px 4px 0 var(--ink); }
+.dj-clock .ph-bar { width: min(100%, 520px); }
+.dj-votes { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 30px; }
+.dj-votes i { font-style: normal; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 99px; background: #fff; color: #111; border: 2px solid var(--ink); animation: slap .35s cubic-bezier(.2,1.4,.4,1); }
+.dj-res { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.dj-rc { display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; background: var(--surface-2); border: 3px solid var(--ink); border-radius: 22px; padding: 16px; box-shadow: 5px 5px 0 var(--ink); animation: slap .5s cubic-bezier(.2,1.4,.4,1) both; }
+.dj-rc + .dj-rc { animation-delay: .15s; }
+.dj-rc.win { background: linear-gradient(160deg, #ffcc33, #ff8a3d); color: #1a0f05; animation: slap .5s cubic-bezier(.2,1.4,.4,1) both, phhot .9s ease-in-out .6s infinite; }
+.dj-rc.lose { filter: saturate(.4); rotate: 1deg; }
+.dj-rc img, .dj-rc .ph { width: min(100%, 28dvh, 240px); aspect-ratio: 1; border-radius: 14px; border: 3px solid var(--ink); object-fit: cover; background: #111; display: grid; place-items: center; font-size: 60px; }
+.dj-rc .t { font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1.15; }
+.dj-rc .ar { font-size: 14px; opacity: .8; }
+.dj-rc .by { font-family: var(--marker); font-size: 20px; }
+.dj-meter { width: 100%; height: 30px; border-radius: 99px; border: 2.5px solid var(--ink); background: rgba(0,0,0,.25); overflow: hidden; position: relative; }
+.dj-meter i { display: block; height: 100%; width: 0; background: #fff; transition: width 1.4s cubic-bezier(.2,.9,.3,1); }
+.dj-meter b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; color: #fff; text-shadow: 2px 2px 0 var(--ink); }
+.dj-track { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 2.5px solid var(--ink); border-radius: 14px; background: var(--surface-2); padding: 8px; box-shadow: 0 3px 0 var(--ink); color: inherit; }
+.dj-track img, .dj-track .ph { width: 48px; height: 48px; border-radius: 8px; flex: none; object-fit: cover; background: #111; display: grid; place-items: center; }
+.dj-track div { min-width: 0; }
+.dj-track b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dj-track span { display: block; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dj-track.on { background: #b8f135; color: #14110a; } .dj-track.on span { color: #2b3a10; }
+.dj-results { display: flex; flex-direction: column; gap: 8px; max-height: 46dvh; overflow: auto; padding: 2px 4px 6px 2px; }
+.dj-ab { border: 3px solid var(--ink); border-radius: 26px; color: #fff; font-family: var(--fun); font-size: 30px; padding: 18px 10px; box-shadow: 0 7px 0 var(--ink); text-shadow: 3px 3px 0 var(--ink); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dj-ab big { font-size: 84px; line-height: 1; }
+.dj-ab.on { outline: 5px solid #fff; outline-offset: -11px; transform: translateY(3px); box-shadow: 0 4px 0 var(--ink); }
+.dj-ab.dim { opacity: .4; }
+.dj-abs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dj-mini { display: inline-flex; gap: 4px; }
+.dj-mini button { border: 2px solid var(--ink); border-radius: 8px; width: 30px; height: 28px; font-weight: 800; color: #fff; background: var(--surface-2); }
+.dj-mini button.on.a { background: #ff2e88; } .dj-mini button.on.b { background: #33a0ff; }
+.dj-voters { display: flex; flex-direction: column; gap: 6px; }
+.dj-voters > div { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: var(--surface-2); font-weight: 700; }
+.dj-voters em { font-style: normal; color: #b8f135; }
+.djp-dot { width: 12px; height: 12px; border-radius: 50%; background: #ff3d3d; border: 2px solid var(--ink); flex: none; }
+.djp-dot.on { background: #b8f135; }
+#djp .center .big { font-size: 72px; line-height: 1; }
+.dj-round { text-align: center; background: linear-gradient(135deg, #ff2e88, #7a2cff); color: #fff; border: 3px solid var(--ink); border-radius: 26px; padding: 34px 22px; box-shadow: 8px 8px 0 var(--ink); rotate: -1.2deg; animation: slap .5s cubic-bezier(.2,1.4,.4,1); }
+.dj-round small { font-family: var(--marker); font-size: 22px; display: block; }
+.dj-round b { font-family: var(--fun); font-weight: 400; font-size: clamp(40px, 10dvh, 96px); line-height: 1.05; display: block; text-shadow: 5px 5px 0 var(--ink); }
+.dj-round p { font-weight: 700; font-size: 18px; margin: 12px 0 0; }
+.dj-round.small { padding: 16px 18px; } .dj-round.small b { font-size: clamp(30px, 6dvh, 54px); }
+.dj-roster.big { justify-content: center; } .dj-roster.big span { font-size: 18px; padding: 10px 16px; }
+.dj-rc.on { outline: 4px solid var(--accent); box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 55%, transparent), 5px 5px 0 var(--ink); transform: scale(1.03); }
+.dj-rc.on .dj-eq i { animation: eq .45s ease-in-out infinite alternate; }
+.dj-rc.off { opacity: .5; }
+.dj-pts { font-family: var(--fun); font-size: 34px; line-height: 1; text-shadow: 3px 3px 0 var(--ink); color: #b8f135; }
+.dj-rc.win .dj-pts { color: #fff; }
+.dj-board { display: flex; flex-direction: column; gap: 8px; }
+.dj-brow { display: grid; grid-template-columns: 44px 1fr auto auto; gap: 14px; align-items: center; background: var(--surface-2); border: 2.5px solid var(--ink); border-radius: 16px; padding: 10px 16px; box-shadow: 0 4px 0 var(--ink); animation: slap .45s cubic-bezier(.2,1.4,.4,1) both; }
+.dj-brow:first-child { background: linear-gradient(135deg, #ffcc33, #ff8a3d); color: #1a0f05; }
+.dj-brow .rk { font-family: var(--fun); font-size: 28px; }
+.dj-brow .nm { font-weight: 800; font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dj-brow em { font-style: normal; font-weight: 800; color: #b8f135; } .dj-brow:first-child em { color: #2b5a1a; }
+.dj-brow b { font-family: var(--fun); font-weight: 400; font-size: 30px; min-width: 70px; text-align: right; }
+.dj-ab em { font-family: var(--display); font-style: normal; font-weight: 800; font-size: 16px; text-shadow: none; line-height: 1.15; overflow-wrap: anywhere; }
+.dj-ab small { font-family: var(--sans); font-size: 12px; text-shadow: none; opacity: .9; }
+@media (max-width: 999px) {
+  .dj-join { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .dj-qr { width: min(70vw, 260px); }
+  .dj-deck, .dj-res { gap: 12px; }
+  .dj-vsx { font-size: 30px; }
+}
+
 /* ---------- Laptop layouts: game on the left/centre, info in a side column ---------- */
 .gl { display: flex; flex-direction: column; gap: 16px; }
 .gl-main, .gl-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -816,7 +917,7 @@ input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px co
 @media (min-width: 900px) {
   .wrap { max-width: 1440px; }
   .screen { width: 100%; max-width: 760px; margin: 0 auto; }
-  #home, #dgPlayers, #setup, #join, #share { max-width: 600px; }
+  #home, #dgPlayers, #setup, #join, #share, #djp { max-width: 600px; }
   #dg.wide { max-width: 1440px; }
   .card { min-height: 420px; padding: 40px 40px 26px; }
   .card-text { font-size: 40px; }
@@ -907,6 +1008,7 @@ input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px co
         <button class="tile" data-dg="bomb"><i class="new">new!</i><b>💣</b><strong>Ticking bomb</strong><span>Name one, pass it on. Don't hold it when it blows.</span></button>
         <button class="tile" data-dg="shell"><i class="new">new!</i><b>🥤</b><strong>Zoek de kroon</strong><span>Follow the crown under the cups. Lose track, drink.</span></button>
         <button class="tile" data-dg="king"><i class="new">🇯🇵 new!</i><b>🥢</b><strong>King game</strong><span>Secret numbers. The King commands. No escape.</span></button>
+        <button class="tile" data-dg="dj"><i class="new">📱 new!</i><b>🎧</b><strong>DJ Duel</strong><span>Quiplash with songs. Pick the funniest track on your phone, the room votes.</span></button>
         <button class="tile" data-dg="power"><i class="new">🇺🇸 new!</i><b>⚡</b><strong>Power Hour</strong><span>New song every minute = drink. Plays with your Spotify.</span></button>
       </div>
     </section>
@@ -1029,11 +1131,21 @@ input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px co
       <button class="icon-btn" data-go="home" aria-label="Back">←</button>
       <h2>Join a game</h2>
     </div>
-    <p class="sub">Enter the code shown on the host's phone.</p>
+    <p class="sub">Enter the code shown on the host's screen. Jar rooms have 6 characters, DJ Duel rooms have 4 letters.</p>
     <input type="text" class="code-input" id="joinInput" maxlength="7" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC-DEF">
     <p class="error" id="joinError"></p>
     <div style="flex:1"></div>
     <button class="btn primary" id="btnJoinGo">Join</button>
+  </section>
+
+  <!-- DJ DUEL: a phone that joined the laptop's room -->
+  <section class="screen" id="djp">
+    <div class="game-top">
+      <button class="icon-btn" id="djpExit" aria-label="Leave">✕</button>
+      <div class="pill"><span class="chip">🎧 DJ Duel</span><span class="chip" id="djpCode"></span></div>
+      <span class="djp-dot" id="djpDot"></span>
+    </div>
+    <div class="dg-body" id="djpBody"></div>
   </section>
 
   <!-- GAME -->
@@ -2126,6 +2238,8 @@ $("#joinInput").addEventListener("input", (e) => {
   $("#joinError").textContent = "";
 });
 function doJoin() {
+  const raw = $("#joinInput").value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (raw.length === 4) return djpJoin(raw);
   const c = decodeCode($("#joinInput").value);
   if (!c) { $("#joinError").textContent = "That code doesn't look right. Check it and try again."; return; }
   game = { cfg: c, idx: 0 };
@@ -2387,7 +2501,8 @@ const GAMES = {
   schock: { title: "🇩🇪 Schocken", wide: true, make: (p) => makeSchock(p) },
   toma: { title: "🇲🇽 Toma Todo", wide: true, make: (p) => makeToma(p) },
   king: { title: "🇯🇵 King game", make: (p) => makeKing(p) },
-  power: { title: "🇺🇸 Power Hour", wide: true, make: (p) => makePower(p) }
+  power: { title: "🇺🇸 Power Hour", wide: true, make: (p) => makePower(p) },
+  dj: { title: "🎧 DJ Duel", wide: true, make: (p) => makeDJ(p) }
 };
 function openGame(key) {
   if (players.length < 2) { pendingGame = key; openDgPlayers(); return; }
@@ -2416,6 +2531,14 @@ $("#dgRules").addEventListener("click", () => openModal(
   `<h2>${GAMES[G.key].title}</h2><div class="rules">${RULES[G.key]}</div><button class="btn primary" data-m="close">Got it</button>`));
 
 const RULES = {
+  dj: `<p>Quiplash, but with songs. Everyone joins on their phone with the room code (or the QR code). Spotify plays the songs from the laptop.</p>
+    <ul><li>Each round, everyone gets <b>2 prompts</b> on their phone, like "The song playing when you get arrested", and has <b>60 seconds</b> to pick a song for each. Too slow? You get a random <b>safety song</b> 🐌.</li>
+    <li>Every prompt goes to two players. The matchups play one by one on the laptop: both songs play for <b>15 seconds</b>, with titles but without names.</li>
+    <li>Everyone else votes on their phone. <b>Funny and original beats "good".</b></li>
+    <li>Points: 100 per vote, +100 for winning the matchup, and a <b>SONGLASH</b> (every single vote) is +200 more.</li>
+    <li>The loser of a matchup drinks the vote difference (max 3). A songlash = 3 sips.</li>
+    <li>After each round there's a leaderboard: last place drinks 2 and first place hands out 2.</li>
+    <li>Round 1 is normal points, round 2 is <b>double points</b>, and round 3 is the <b>silly round</b> (geese, Roombas, haunted fridges), also double points.</li></ul>`,
   schock: `<p>Germany's pub dice game. Three dice, and the player who opens the round may throw <b>up to 3 times</b>. That number is the limit for everyone in the round. Between throws you may only keep <b>1s</b> aside.</p>
     <ul><li><b>Schock aus</b> (1-1-1): the best hand. The loser of the round gets all 13 mats at once and loses the half.</li>
     <li><b>Schock 6 … 2</b> (two 1s plus a 6…2): worth 6 … 2 mats. 1-1-2 is called "Schock doof".</li>
@@ -4036,9 +4159,11 @@ const Music = (() => {
   // Browsers only allow sound after a tap, so music starts on the first interaction.
   document.addEventListener("pointerdown", function first(e) {
     document.removeEventListener("pointerdown", first, true);
-    if (on && !e.target.closest(".music-btn")) start();
+    if (on && !e.target.closest(".music-btn") && !phoneOnly()) start();
   }, true);
-  document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); else if (on && ctx) start(); });
+  // A phone that joined a DJ Duel stays quiet: the laptop plays the music.
+  const phoneOnly = () => !!document.querySelector("#djp.active");
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); else if (on && ctx && !phoneOnly()) start(); });
   $$(".music-btn").forEach((b) => b.addEventListener("click", () => openSound()));
   paint();
   return { toggle, start, stop, nextSong, get on() { return on; } };
@@ -5155,10 +5280,12 @@ const Spotify = (() => {
   const K = { id: "kletspotje:spotify-id", tok: "kletspotje:spotify-token", ver: "kletspotje:spotify-verifier" };
   const SCOPES = "user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative";
   let tok = loadJ(K.tok), me = null, lists = null, now = null, err = "", busy = false, active = false;
-  const redirect = () => location.origin + location.pathname;
+  const DEFAULT_ID = "a319134ffdaf40e8bc697680266c75fc"; // the Ministry's own Spotify app (a Client ID is public by design with PKCE)
+  // Same address whether the page was opened as /DRINKING/ or /DRINKING/index.html.
+  const redirect = () => location.origin + location.pathname.replace(/index\.html$/, "");
   const servable = () => location.protocol === "https:" || /^http:\/\/(127\.0\.0\.1|\[::1\])(:\d+)?$/.test(location.origin);
   const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const clientId = () => loadJ(K.id) || "";
+  const clientId = () => loadJ(K.id) || DEFAULT_ID;
   const connected = () => !!(tok && tok.refresh);
 
   async function connect() {
@@ -5181,7 +5308,7 @@ const Spotify = (() => {
   async function handleRedirect() {
     const q = new URLSearchParams(location.search);
     if (!q.has("code") && !q.has("error")) return;
-    history.replaceState(null, "", location.pathname);
+    history.replaceState(null, "", location.pathname.replace(/index\.html$/, ""));
     if (q.get("error")) { err = "Spotify login was cancelled (" + q.get("error") + ")."; return; }
     const saved = loadJ(K.ver);
     if (!saved || saved.state !== q.get("state")) { err = "Spotify login expired. Try connecting again."; return; }
@@ -5208,6 +5335,12 @@ const Spotify = (() => {
     }
     return j;
   }
+  async function device() {
+    const dv = await api("GET", "/me/player/devices");
+    const d = dv && (dv.devices.find((x) => x.is_active) || dv.devices[0]);
+    if (!d) throw new Error("No Spotify device found. Open Spotify on a phone or laptop first.");
+    return d;
+  }
   async function guard(fn) { try { err = ""; return await fn(); } catch (e) { err = e.message; return null; } }
   const S = {
     get connected() { return connected(); }, get err() { return err; }, get active() { return active; }, get now() { return now; }, get lists() { return lists; },
@@ -5224,13 +5357,28 @@ const Spotify = (() => {
     },
     async play(uri) {
       return guard(async () => {
-        const dv = await api("GET", "/me/player/devices");
-        const d = dv && (dv.devices.find((x) => x.is_active) || dv.devices[0]);
-        if (!d) throw new Error("No Spotify device found. Open Spotify on a phone or laptop first.");
+        const d = await device();
         await api("PUT", "/me/player/shuffle?state=true&device_id=" + d.id).catch(() => {});
         await api("PUT", "/me/player/play?device_id=" + d.id, uri ? { context_uri: uri } : undefined);
         active = true; if (Music.on) Music.toggle(); paintBtns();
         return true;
+      });
+    },
+    // Play one track from a position (DJ Duel). Shuffle stays as it is.
+    async playTrack(uri, ms = 0) {
+      return guard(async () => {
+        const d = await device();
+        await api("PUT", "/me/player/play?device_id=" + d.id, { uris: [uri], position_ms: ms });
+        active = true; if (Music.on) Music.toggle(); paintBtns();
+        return true;
+      });
+    },
+    async search(q) {
+      const j = await guard(() => api("GET", "/search?" + new URLSearchParams({ q, type: "track", limit: "10", market: "from_token" })));
+      if (!j || !j.tracks) return null;
+      return j.tracks.items.filter(Boolean).map((t) => {
+        const im = (t.album && t.album.images) || [];
+        return { uri: t.uri, name: t.name, artist: (t.artists || []).map((a) => a.name).join(", "), art: (im[1] || im[0] || {}).url || "", thumb: (im[2] || im[1] || im[0] || {}).url || "" };
       });
     },
     pause: () => guard(() => api("PUT", "/me/player/pause")).then(() => { active = false; paintBtns(); }),
@@ -5769,8 +5917,594 @@ function makeKing(p) {
   return g;
 }
 
+/* ============================================================
+   DJ DUEL: two DJs secretly pick a song for a theme, the room votes live on their phones.
+   The laptop hosts a room over WebRTC (PeerJS; its free public server only introduces the devices) and does all the
+   Spotify work. Phones join with a 4-letter code or the QR code, search through the laptop, pick and vote.
+   ============================================================ */
+// Prompts for rounds 1 and 2. The goal is the funniest or most original song, not the "best" one.
+const DJ_PROMPTS = [
+  "The song playing when you get arrested", "Your ex's wedding song", "What the pilot plays right before the plane crashes",
+  "The song your mum puts on at your 18th birthday", "Music for a very awkward first date", "The song that plays when you open your banking app",
+  "Walk-out song for a dentist", "What plays in the Uber home after a terrible night", "The theme song of your love life",
+  "Breaking up with someone, but over the speakers", "The song playing in hell's waiting room", "What your neighbours hear at 3 AM",
+  "When the teacher catches you cheating", "Your entrance song at a family funeral (please don't)", "What you'd play to make a baby cry",
+  "Soundtrack for doing your taxes", "When you see your crush with someone else", "Music for a hostage negotiation",
+  "What the Titanic band should have played", "What the Albert Heijn cashier is humming", "A romantic dinner at McDonald's",
+  "Your villain origin story", "Waking up in a stranger's bed", "Being picked last in gym class", "A gender reveal that goes horribly wrong",
+  "The moment the WiFi drops", "The national anthem of the night bus", "The song your future kids will be ashamed you liked",
+  "The lift music on the way to heaven", "The police knock on the door at a house party", "The worst possible song to propose to",
+  "Secretly reading your partner's texts", "When you stub your toe", "What Santa listens to while breaking into houses",
+  "The 7th beer", "When someone leaves the group chat", "Your own roast", "What your grandma twerks to", "Background music for a job interview",
+  "The anthem of people who reply-all", "A hungover Sunday", "Someone who just lost all their crypto", "When the Tikkie comes in",
+  "The first dance at a divorce party", "The song that plays when you finally poop after 3 days", "Getting dumped over text",
+  "A driving test you're definitely failing", "The bouncer says 'not tonight'", "Your search history, as a song"
+];
+// Round 3: the silly round.
+const DJ_SILLY = [
+  "The song a goose picks before starting a fight", "Funeral music for a hamster", "What a Roomba listens to at night", "IKEA's national anthem",
+  "A pigeon trying to impress another pigeon", "What aliens play while abducting a cow", "What your fridge sings when you open it at 3 AM",
+  "A lullaby for a T-rex", "The entrance song of a very small dog", "What a croissant hears in the oven", "A sock that lost its partner in the wash",
+  "What cats play the moment you leave the house", "Theme song of a sentient bicycle in Amsterdam", "What a cow listens to while being milked",
+  "Karaoke night at the bottom of the ocean", "A potato's wedding", "A seagull stealing your fries", "A spider's nightclub",
+  "A snail's 100-metre sprint", "The anthem of the Smurf rebellion", "A duck's TED talk", "A tulip being picked", "What God plays on shuffle",
+  "Your houseplant's motivational playlist", "A frog's boxing debut", "A kebab on its way to your stomach", "The breakup of two magnets",
+  "Disco night for dinosaurs", "A raccoon robbing a bin", "A penguin's first day at the office", "A sheep that can't fall asleep",
+  "The ice-cream truck in the apocalypse", "A horse doing its taxes", "Two Roombas falling in love"
+];
+// Played for anyone who runs out of time: famously silly songs, found with a Spotify search.
+const DJ_SAFETY = [
+  "Never Gonna Give You Up Rick Astley", "Axel F Crazy Frog", "Barbie Girl Aqua", "Macarena Los del Rio", "Gangnam Style PSY", "Cotton Eye Joe Rednex",
+  "Friday Rebecca Black", "The Fox Ylvis", "Mambo No. 5 Lou Bega", "Who Let the Dogs Out Baha Men", "Asereje Las Ketchup", "Dragostea Din Tei O-Zone",
+  "Blue (Da Ba Dee) Eiffel 65", "Baby Shark Pinkfong", "Chicken Song J.J. Lionel", "Ievan Polkka", "The Final Countdown Europe", "Trololo Eduard Khil",
+  "Gummy Bear Song", "Ik heb een toeter op mijn waterscooter", "Cha Cha Slide", "Mr. Saxobeat Alexandra Stan"
+];
+const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15;
+const DJ_ROUNDS = [{ name: "Round 1", sub: "Normal points", mult: 1 }, { name: "Round 2", sub: "Double points!", mult: 2 }, { name: "The silly round", sub: "Silly prompts · double points", mult: 2, silly: true }];
+const DJ_SITE = "https://lucavanruiten.github.io/DRINKING/";
+const DJ_LIBS = { peer: "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js", qr: "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" };
+const libP = {};
+// Load a library on demand (only DJ Duel needs these), once.
+function loadLib(k) {
+  return libP[k] || (libP[k] = new Promise((res, rej) => {
+    const sc = document.createElement("script"); sc.src = DJ_LIBS[k]; sc.onload = res;
+    sc.onerror = () => { delete libP[k]; sc.remove(); rej(new Error("Couldn't load the live link. Check the internet connection and try again.")); };
+    document.head.append(sc);
+  }));
+}
+const DJ_ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const djPeerId = (code) => "ministry-slokjes-dj-" + code.toLowerCase();
+const djOnline = () => location.protocol === "https:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname);
+const djBase = () => (djOnline() ? location.origin + location.pathname.replace(/index\.html$/, "") : DJ_SITE);
+const djSafeImg = (u) => (/^https:\/\/[a-z0-9.-]+\.(scdn\.co|spotifycdn\.com)\//i.test(u || "") ? u : "");
+const es = (v) => esc(String(v == null ? "" : v)); // for data that came over the wire
+function djTrackBtn(t, attr, on) {
+  const img = djSafeImg(t.thumb || t.art);
+  return `<button class="dj-track${on ? " on" : ""}" ${attr}>${img ? `<img src="${es(img)}" alt="">` : `<span class="ph">🎵</span>`}<div><b>${es(t.name)}</b><span>${es(t.artist)}</span></div></button>`;
+}
+
+// The laptop's side of the live link. Phones say hello with a name from the guest list; one phone per name.
+function djRoom(h) {
+  const room = { code: "", status: "starting", err: "", conns: new Map(), peer: null, dead: false };
+  const names = (conn) => conn.open && conn.send({ t: "names", names: h.names(), taken: [...room.conns.keys()] });
+  function open() {
+    room.code = Array.from({ length: 4 }, () => DJ_ALPH[rand(DJ_ALPH.length)]).join("");
+    const peer = new Peer(djPeerId(room.code), { debug: 0 });
+    room.peer = peer;
+    peer.on("open", () => { room.status = "open"; room.err = ""; h.change(); });
+    peer.on("error", (e) => {
+      if (room.dead || room.peer !== peer) return;
+      if (e.type === "unavailable-id") { peer.destroy(); return open(); } // code already in use somewhere: roll a new one
+      if (e.type === "peer-unavailable") return;
+      if (room.status !== "open") { room.err = "The live link couldn't start (" + (e.type || e.message) + ")."; h.change(); }
+    });
+    peer.on("disconnected", () => setTimeout(() => { if (!room.dead && !peer.destroyed && peer.disconnected) peer.reconnect(); }, 1500));
+    peer.on("connection", (conn) => {
+      conn.on("open", () => names(conn));
+      conn.on("data", (d) => {
+        if (room.dead || !d || typeof d !== "object") return;
+        if (d.t === "hello") {
+          const name = String(d.name || "");
+          if (!h.names().includes(name)) return names(conn);
+          const old = room.conns.get(name);
+          if (old && old !== conn) { old._name = null; try { old.close(); } catch (e) {} }
+          conn._name = name; room.conns.set(name, conn); h.join(name);
+          return;
+        }
+        if (conn._name && room.conns.get(conn._name) === conn) h.msg(conn._name, d);
+      });
+      conn.on("close", () => { if (conn._name && room.conns.get(conn._name) === conn) { room.conns.delete(conn._name); h.change(); } });
+    });
+  }
+  room.send = (name, msg) => { const c = room.conns.get(name); if (c && c.open) try { c.send(msg); } catch (e) {} };
+  room.close = () => { room.dead = true; if (room.peer) try { room.peer.destroy(); } catch (e) {} };
+  open();
+  return room;
+}
+
+function makeDJ(p) {
+  const s = { phase: "lobby", ri: -1, parts: [], prompts: [], order: [], mi: 0, flip: 0, cur: 0, endsAt: 0, loading: false, votes: {}, res: null,
+    score: {}, delta: {}, bagN: [], bagS: [], found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0 };
+  let room = null;
+  const online = (x) => !!(room && room.conns.has(x));
+  const RD = () => DJ_ROUNDS[s.ri];
+  const fromBag = (key, list) => { if (!s[key].length) s[key] = shuffleArr(list.slice()); return s[key].pop(); };
+  // A player's two prompts: [{ j: prompt index, slot: 0 or 1 }].
+  const mine = (x) => s.prompts.map((pr, j) => ({ j, slot: pr.authors.indexOf(x) })).filter((m) => m.slot >= 0);
+  const doneAll = (x) => mine(x).every(({ j, slot }) => s.prompts[j].songs[slot]);
+  const curPr = () => s.prompts[s.order[s.mi]];
+  const disp = () => (s.flip ? [1, 0] : [0, 1]); // screen position → song slot
+  const voters = (pr) => s.parts.filter((x) => !pr.authors.includes(x));
+  const pub = (t) => t && { name: t.name, artist: t.artist, art: t.art, thumb: t.thumb };
+  const L = (k) => (k ? "B" : "A");
+  const ranked = () => Object.keys(s.score).sort((a, b) => s.score[b] - s.score[a]);
+
+  // What one phone gets to know. Who picked which song stays secret until the reveal.
+  function stFor(x) {
+    const st = { t: "state", phase: s.phase, ri: s.ri, round: s.ri >= 0 ? RD().name : "", sub: s.ri >= 0 ? RD().sub : "", gen: s.gen,
+      left: s.endsAt ? Math.max(0, (s.endsAt - Date.now()) / 1000) : 0, inGame: s.parts.includes(x), err: s.err };
+    if (s.phase === "answer" || s.phase === "filling") {
+      st.mine = mine(x).map(({ j, slot }) => ({ text: s.prompts[j].text, pick: pub(s.prompts[j].songs[slot]) }));
+      st.done = s.parts.filter(doneAll).length; st.total = s.parts.length;
+    }
+    if (s.phase === "show" || s.phase === "vote" || s.phase === "reveal") {
+      const pr = curPr(), d = disp(), a = pr.authors.indexOf(x);
+      st.m = { n: s.mi + 1, of: s.order.length, prompt: pr.text, songs: d.map((sl) => pub(pr.songs[sl])), cur: s.cur, loading: s.loading,
+        author: a >= 0 ? d.indexOf(a) : -1, vote: s.votes[x] != null ? s.votes[x] : null, res: s.phase === "reveal" ? s.res : null };
+    }
+    if (s.phase === "board" || s.phase === "final") st.board = s.board;
+    return st;
+  }
+  function sync() { if (room) for (const x of room.conns.keys()) room.send(x, stFor(x)); }
+  function openRoom() {
+    s.err = "";
+    loadLib("peer").then(() => {
+      if (G !== g) return;
+      room = djRoom({
+        names: () => p,
+        join: (x) => { tone(880, 0.06, "triangle", 0.08); tone(1320, 0.08, "triangle", 0.06, 0.06); room.send(x, stFor(x)); paint(); },
+        change: () => paint(),
+        msg: onMsg
+      });
+    }).catch((e) => { s.err = e.message; paint(); });
+    loadLib("qr").then(() => paint()).catch(() => {});
+  }
+  function onMsg(x, d) {
+    const answering = s.phase === "answer" && s.parts.includes(x);
+    if (d.t === "search" && answering) {
+      const q = String(d.q || "").slice(0, 80).trim(); if (!q) return;
+      Spotify.search(q).then((items) => {
+        if (G !== g || !room) return;
+        s.found[x] = items || [];
+        room.send(x, { t: "results", items: items || [], err: items ? "" : Spotify.err });
+      });
+    } else if (d.t === "pick" && answering) {
+      const m = mine(x)[d.k | 0], t = (s.found[x] || [])[d.i | 0];
+      if (!m || !t) return;
+      s.prompts[m.j].songs[m.slot] = t;
+      tone(660, 0.08, "triangle", 0.1); tone(990, 0.12, "triangle", 0.08, 0.08);
+      paint(); sync();
+      if (s.parts.every(doneAll)) setTimeout(() => { if (G === g) finishAnswer(); }, 1200);
+    } else if (d.t === "vote" && s.phase === "vote" && voters(curPr()).includes(x) && (d.v === 0 || d.v === 1)) castVote(x, d.v);
+  }
+
+  // ---------- flow ----------
+  function startRound() {
+    const parts = p.filter(online);
+    if (parts.length < 3) { s.err = "You need at least 3 phones connected."; return paint(); }
+    s.ri++; s.err = ""; s.gen++;
+    const o = shuffleArr(parts.slice()), N = o.length;
+    s.parts = o.slice();
+    // Every prompt goes to two neighbours in a shuffled circle, so everyone gets exactly two prompts and two different rivals.
+    s.prompts = o.map((_, j) => ({ text: fromBag(RD().silly ? "bagS" : "bagN", RD().silly ? DJ_SILLY : DJ_PROMPTS), authors: [o[j], o[(j + 1) % N]], songs: [null, null], safety: [false, false] }));
+    s.parts.forEach((x) => { if (s.score[x] == null) s.score[x] = 0; });
+    s.delta = {}; s.found = {}; s.board = null; s.endsAt = 0; s.phase = "intro";
+    [262, 330, 392, 523].forEach((f, j) => tone(f, 0.2, "sawtooth", 0.05, j * 0.12));
+    paint(); sync();
+    const gen = s.gen;
+    setTimeout(() => { if (G === g && s.phase === "intro" && s.gen === gen) startAnswer(); }, 4000);
+  }
+  function startAnswer() {
+    s.phase = "answer"; s.endsAt = Date.now() + DJ_ANSWER * 1000;
+    sweep(300, 900, 0.35, "sawtooth", 0.03);
+    paint(); sync();
+  }
+  async function finishAnswer() {
+    if (s.phase !== "answer") return;
+    s.phase = "filling"; s.endsAt = 0; paint(); sync();
+    // Too slow? You get a safety song.
+    for (const pr of s.prompts) for (const slot of [0, 1]) {
+      if (pr.songs[slot]) continue;
+      const items = await Spotify.search(DJ_SAFETY[rand(DJ_SAFETY.length)]);
+      if (G !== g) return;
+      if (items && items[0]) { pr.songs[slot] = items[0]; pr.safety[slot] = true; }
+    }
+    s.order = shuffleArr(s.prompts.map((_, j) => j)); s.mi = 0;
+    startMatchup();
+  }
+  function startMatchup() {
+    const pr = curPr();
+    s.flip = rand(2); s.votes = {}; s.res = null; s.cur = 0; s.endsAt = 0;
+    if (!pr.songs[0] || !pr.songs[1]) { s.phase = "show"; return reveal(); } // a missing song forfeits
+    s.phase = "show"; playCur();
+  }
+  function playCur() {
+    const t = curPr().songs[disp()[s.cur]];
+    s.loading = true; s.endsAt = 0; s.err = ""; paint(); sync();
+    Spotify.playTrack(t.uri, 0).then((ok) => {
+      if (G !== g || s.phase !== "show") return;
+      s.loading = false;
+      if (!ok) { s.err = Spotify.err || "Spotify didn't start playing."; paint(); return; }
+      s.endsAt = Date.now() + DJ_CLIP * 1000; paint(); sync();
+    });
+  }
+  function nextSong() {
+    if (s.cur === 0) { s.cur = 1; playCur(); }
+    else { Spotify.pause(); startVote(); }
+  }
+  function startVote() {
+    s.phase = "vote"; s.votes = {}; s.endsAt = Date.now() + DJ_VOTE * 1000; s.err = "";
+    [0, 0.12, 0.24].forEach((w) => [466, 587, 698].forEach((f) => tone(f, 0.16, "sawtooth", 0.05, w)));
+    paint(); sync();
+    if (!voters(curPr()).some(online)) setTimeout(() => { if (G === g) reveal(); }, 1500);
+  }
+  function castVote(x, v) {
+    const first = s.votes[x] == null;
+    s.votes[x] = v;
+    if (first) tone(1200 + rand(300), 0.05, "square", 0.05);
+    paint(); sync();
+    if (voters(curPr()).filter(online).every((y) => s.votes[y] != null)) setTimeout(() => { if (G === g) reveal(); }, 900);
+  }
+  function reveal() {
+    if (s.phase !== "vote" && s.phase !== "show") return;
+    const pr = curPr(), d = disp(), mult = RD().mult, v = [0, 0];
+    voters(pr).forEach((x) => { if (s.votes[x] != null) v[s.votes[x]]++; });
+    const authors = d.map((sl) => pr.authors[sl]), pts = [0, 0];
+    const missing = d.map((sl) => !pr.songs[sl]);
+    let win = -1, lash = false, drinkRes = null;
+    if (missing[0] || missing[1]) { win = missing[0] && missing[1] ? -1 : missing[0] ? 1 : 0; if (win >= 0) pts[win] = 100 * mult; }
+    else {
+      pts[0] = v[0] * 100 * mult; pts[1] = v[1] * 100 * mult;
+      if (v[0] !== v[1]) {
+        win = v[0] > v[1] ? 0 : 1; const lose = 1 - win;
+        pts[win] += 100 * mult;
+        lash = v[lose] === 0 && v[win] >= 2;
+        if (lash) pts[win] += 200 * mult;
+        const n = lash ? 3 : Math.min(3, v[win] - v[lose]);
+        drink(authors[lose], n); drinkRes = { name: authors[lose], n };
+      }
+    }
+    authors.forEach((x, k) => { s.score[x] = (s.score[x] || 0) + pts[k]; s.delta[x] = (s.delta[x] || 0) + pts[k]; });
+    s.res = { v, authors, pts, win, lash, drink: drinkRes, safety: d.map((sl) => pr.safety[sl]), missing };
+    s.phase = "reveal"; s.endsAt = 0;
+    for (let k = 0; k < 12; k++) noiseHit(0.05, 0.12, 300, "lowpass", k * 0.05);
+    paint(); sync();
+    setTimeout(() => {
+      if (G !== g || s.phase !== "reveal") return;
+      $$(".dj-meter i").forEach((el) => (el.style.width = el.dataset.w + "%"));
+      if (win < 0) { tone(220, 0.4, "sawtooth", 0.06); tone(207, 0.5, "sawtooth", 0.06, 0.2); return; }
+      [523, 659, 784, 1047, 1319].forEach((f, j) => tone(f, 0.2, "sawtooth", 0.05, j * 0.09));
+      const w = $(".dj-rc.win"); fxLayer();
+      if (w) { const b = w.getBoundingClientRect(); confetti(b.left + b.width / 2, b.top + b.height / 3, lash ? 220 : 120, NEON, lash ? 1.8 : 1.3); }
+    }, 650);
+  }
+  function showBoard() {
+    const names = ranked(), act = names.filter((x) => s.parts.includes(x));
+    const top = Math.max(...act.map((x) => s.score[x])), low = Math.min(...act.map((x) => s.score[x]));
+    const last = top === low ? [] : act.filter((x) => s.score[x] === low);
+    const first = act.filter((x) => s.score[x] === top);
+    last.forEach((x) => drink(x, 2));
+    s.board = { rows: names.map((x) => ({ name: x, score: s.score[x], delta: s.delta[x] || 0 })), last, first: first.length === 1 ? first[0] : null, given: false };
+    s.phase = s.ri === DJ_ROUNDS.length - 1 ? "final" : "board"; s.endsAt = 0;
+    Spotify.pause();
+    [392, 523, 659, 784, 1047].forEach((f, j) => tone(f, 0.2, "sawtooth", 0.05, j * 0.1));
+    paint(); sync();
+    setTimeout(() => {
+      if (G !== g) return;
+      $$(".dj-brow b[data-to]").forEach((el) => countUp(el, +el.dataset.from, +el.dataset.to));
+      if (s.phase === "final") { fxLayer(); confetti(innerWidth / 2, innerHeight * 0.3, 260, NEON, 1.8); }
+    }, 300);
+  }
+  function countUp(el, a, b) {
+    const t0 = performance.now(), D = 1200;
+    (function f(now) { const k = Math.min(1, (now - t0) / D); el.textContent = Math.round(a + (b - a) * (1 - Math.pow(1 - k, 3))); if (k < 1 && el.isConnected) requestAnimationFrame(f); })(t0);
+  }
+
+  // ---------- laptop screen ----------
+  const roundChip = () => (s.ri >= 0 ? `<span class="chip">${RD().name}${RD().mult > 1 ? " · ×" + RD().mult : ""}</span>` : "");
+  const mini = () => `<div class="section"><p class="label">Leaderboard</p><div class="tally">${ranked().map((x, i) =>
+    `<div><span>${i === 0 && s.score[x] ? "👑 " : ""}${esc(x)}${online(x) ? "" : " <span class='sub'>(offline)</span>"}</span><b>${s.score[x]}</b></div>`).join("")}</div></div>`;
+  function songCard(k, mode) {
+    const pr = curPr(), sl = disp()[k], t = pr.songs[sl], r = s.res;
+    const art = t && djSafeImg(t.art);
+    let cls = "", extra = "";
+    if (mode === "show") cls = k === s.cur && !s.loading && !s.err ? " on" : k > s.cur ? " off" : "";
+    if (mode === "reveal") {
+      cls = r.win === k ? " win" : r.win >= 0 ? " lose" : "";
+      const pct = r.v[0] + r.v[1] ? Math.round((r.v[k] / (r.v[0] + r.v[1])) * 100) : 0;
+      extra = `<div class="by">${esc(r.authors[k])}${r.safety[k] ? " <small>(safety song 🐌)</small>" : ""}</div>
+        <div class="dj-meter"><i data-w="${pct}" style="background:${k ? "#33a0ff" : "#ff2e88"}"></i><b>${r.v[k]} vote${r.v[k] === 1 ? "" : "s"}</b></div>
+        <div class="dj-pts">+${r.pts[k]}</div>`;
+    }
+    return `<div class="dj-rc${cls}"><span class="chip">${mode === "reveal" && r.win === k ? (r.lash ? "💥 SONGLASH!" : "👑 WINNER") : "Song " + L(k)}</span>
+      ${art ? `<img src="${esc(art)}" alt="">` : `<span class="ph">${t ? "🎵" : "🚫"}</span>`}
+      <div><div class="t">${t ? esc(t.name) : "No song"}</div><div class="ar">${t ? esc(t.artist) : "Forfeit"}</div></div>
+      ${mode === "show" ? `<div class="dj-eq">${Array.from({ length: 12 }, (_, j) => `<i style="animation-delay:-${((j * 0.137) % 0.45).toFixed(2)}s"></i>`).join("")}</div>` : ""}${extra}</div>`;
+  }
+  function paint() {
+    if (G !== g || !$("#dg").classList.contains("active")) return;
+    let main = "", side = "";
+    if (s.phase === "lobby") {
+      const code = room && room.status === "open" ? room.code : "", err = (room && room.err) || (s.err && !code ? s.err : "");
+      if (code && window.qrcode && s.qrFor !== code) {
+        const q = qrcode(0, "M"); q.addData(djBase() + "?dj=" + code); q.make();
+        s.qr = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); s.qrFor = code;
+      }
+      const cnt = p.filter(online).length;
+      main = `<div class="dj-join"><div class="dj-qr">${code && s.qrFor === code ? s.qr : "📡"}</div><div>
+          <p class="label">Grab your phones 📱</p>
+          ${code ? `<p class="sub">Scan the QR code, or go to</p><p class="dj-url">${esc(djBase().replace(/^https:\/\//, ""))}</p><p class="sub">tap <b>Join a room</b> and enter:</p><div class="code">${code}</div>`
+            : err ? `<p class="error" style="text-align:left">${esc(err)}</p><button class="btn" data-a="reopen">Try again</button>` : `<p class="big-msg">Opening the room…</p>`}
+        </div></div>
+        <div class="center"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${DJ_ANSWER} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`;
+      side = `<div class="section"><p class="label">Who's in · ${cnt}/${p.length} phones</p><div class="dj-roster">${p.map((x) => `<span class="${online(x) ? "on" : ""}">${online(x) ? "📱 " : ""}${esc(x)}</span>`).join("")}</div>
+          <p class="note">Everyone plays on their own phone. Only connected players take part.</p></div>
+        <div class="section"><p class="label" style="color:#1db954">● Spotify</p>${Spotify.connected ? `<p class="sub">Connected. The songs play on your active Spotify device (needs Premium).</p>`
+          : `<p class="sub">The songs come from Spotify, so connect it first.</p><button class="btn spot-btn" data-a="sound">Connect Spotify</button>`}</div>
+        ${s.err && code ? `<p class="error">${esc(s.err)}</p>` : ""}
+        <button class="btn primary pass-btn" data-a="start"${Spotify.connected && cnt >= 3 ? "" : " disabled"}>${cnt >= 3 ? "🎧 Start round 1" : `Waiting for phones (${cnt}/3)`}</button>`;
+    } else if (s.phase === "intro") {
+      main = `<div class="dj-round"><small>${esc(RD().name)}</small><b>${esc(RD().sub)}</b><p>📱 Check your phone: you've got 2 prompts and ${DJ_ANSWER} seconds.</p></div>`;
+      side = `<div class="dg-status">${roundChip()}</div><button class="btn primary" data-a="go">Go now →</button>${mini()}`;
+    } else if (s.phase === "answer" || s.phase === "filling") {
+      const done = s.parts.filter(doneAll).length;
+      main = `<div class="dj-round small"><small>${esc(RD().name)} · ${esc(RD().sub)}</small><b>${s.phase === "filling" ? "Time's up! 🐌" : "Pick your songs!"}</b>
+          <p>${s.phase === "filling" ? "Handing out safety songs to the slowpokes…" : "Two prompts each, on your phone. Funny and original wins."}</p></div>
+        <div class="dj-clock"><b id="djClock">${s.phase === "filling" ? "0" : DJ_ANSWER}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>
+        <div class="dj-roster big">${s.parts.map((x) => { const n = mine(x).filter(({ j, slot }) => s.prompts[j].songs[slot]).length; return `<span class="${n === 2 ? "on" : ""}">${esc(x)} ${n === 2 ? "✅" : n + "/2"}</span>`; }).join("")}</div>`;
+      side = `<div class="dg-status">${roundChip()}<span class="chip">${done}/${s.parts.length} done</span></div>
+        ${s.phase === "answer" ? `<button class="btn" data-a="endanswer">⏩ End the timer now</button>` : ""}${mini()}`;
+    } else if (s.phase === "show" || s.phase === "vote" || s.phase === "reveal") {
+      const pr = curPr();
+      main = `<div class="dj-theme"><small>${esc(RD().name)} · matchup ${s.mi + 1} of ${s.order.length}</small><b>${esc(pr.text)}</b></div>
+        <div class="dj-res">${songCard(0, s.phase)}${songCard(1, s.phase)}</div>`;
+      if (s.phase === "show") {
+        main += `<div class="dj-clock"><b id="djClock">${s.loading ? "…" : "0:" + DJ_CLIP}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>`;
+        side = `<div class="dg-status">${roundChip()}<span class="chip">▶ Song ${L(s.cur)}</span></div>
+          ${s.err ? `<p class="error" style="text-align:left">${esc(s.err)}</p><button class="btn primary" data-a="retry">Try again</button>` : ""}
+          <button class="btn" data-a="skip"${s.loading ? " disabled" : ""}>⏭ ${s.cur === 0 ? "Skip to song B" : "Skip to the vote"}</button>${mini()}`;
+      } else if (s.phase === "vote") {
+        const vs = voters(pr), n = vs.filter((x) => s.votes[x] != null).length;
+        main += `<div class="dj-clock"><b id="djClock">${DJ_VOTE}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div>
+          <p class="big-msg">Vote on your phones! 🗳️</p><div class="dj-votes">${vs.filter((x) => s.votes[x] != null).map((x) => `<i>${esc(x)} ✓</i>`).join("")}</div></div>`;
+        side = `<div class="dg-status">${roundChip()}<span class="chip">${n}/${vs.length} voted</span></div>
+          <p class="sub">The two DJs of this matchup can't vote.</p><button class="btn primary" data-a="reveal">Reveal now</button>${mini()}`;
+      } else {
+        const r = s.res, last = s.mi === s.order.length - 1;
+        const verdict = r.win < 0 ? (r.missing[0] && r.missing[1] ? "Nobody picked a song. Moving on." : "It's a tie! Nobody drinks.")
+          : r.missing[1 - r.win] ? `${esc(r.authors[r.win])} wins by forfeit.`
+          : `${esc(r.authors[r.win])} takes it${r.lash ? " with a SONGLASH 💥" : ""}! ${esc(r.drink.name)} drinks ${sips(r.drink.n)}.`;
+        side = `<div class="fate"><small>Matchup ${s.mi + 1} of ${s.order.length}</small><p>${verdict}</p></div>
+          <button class="btn primary pass-btn" data-a="next">${last ? "🏆 Show the leaderboard" : "Next matchup →"}</button>${mini()}`;
+      }
+    } else if (s.phase === "board" || s.phase === "final") {
+      const b = s.board, fin = s.phase === "final";
+      main = `<div class="dj-round small"><small>${fin ? "Game over" : esc(RD().name) + " done"}</small><b>${fin ? `👑 ${esc(b.rows[0].name)} wins!` : "Leaderboard"}</b></div>
+        <div class="dj-board">${b.rows.map((r, i) => `<div class="dj-brow" style="animation-delay:${i * 0.08}s"><span class="rk">${i + 1}</span><span class="nm">${i === 0 ? "👑 " : ""}${esc(r.name)}</span>
+          ${r.delta ? `<em>+${r.delta}</em>` : ""}<b data-from="${r.score - r.delta}" data-to="${r.score}">${r.score - r.delta}</b></div>`).join("")}</div>`;
+      side = `<div class="fate"><small>${fin ? "Final round" : "End of " + esc(RD().name)}</small>
+          <p>${b.last.length ? `Last place: ${b.last.map(esc).join(" & ")} drink${b.last.length > 1 ? "" : "s"} 2.` : "All tied up. Nobody drinks."}</p>
+          ${b.first && !b.given ? `<button class="btn primary" data-a="give">👑 ${esc(b.first)} hands out 2</button>` : ""}</div>
+        ${fin ? `<button class="btn primary pass-btn" data-a="again">🔁 Play again</button>`
+          : `<button class="btn${b.first && !b.given ? "" : " primary"} pass-btn" data-a="nextround">Next: ${esc(DJ_ROUNDS[s.ri + 1].name)} →</button>`}`;
+    }
+    R(`<div class="gl"><div class="gl-main">${main}</div><div class="gl-side">${side}</div></div>`);
+    clock();
+  }
+  function tick() {
+    const now = Date.now();
+    if (s.phase === "answer" && now >= s.endsAt) return finishAnswer();
+    if (s.phase === "show" && s.endsAt && now >= s.endsAt) { s.endsAt = 0; return nextSong(); }
+    if (s.phase === "vote" && now >= s.endsAt) return reveal();
+    clock();
+  }
+  function clock() {
+    const c = $("#djClock");
+    if (!c || !s.endsAt) return;
+    const total = s.phase === "vote" ? DJ_VOTE : s.phase === "answer" ? DJ_ANSWER : DJ_CLIP, left = Math.max(0, (s.endsAt - Date.now()) / 1000), sec = Math.ceil(left);
+    c.textContent = s.phase === "show" ? "0:" + String(sec).padStart(2, "0") : sec;
+    $("#djBar").style.width = (left / total) * 100 + "%";
+    if (s.phase !== "show" && sec <= 3 && s._beep !== s.phase + sec) { s._beep = s.phase + sec; tone(660, 0.1, "square", 0.07); }
+  }
+  const timer = setInterval(() => {
+    if (G !== g) { clearInterval(timer); if (room) room.close(); room = null; return; }
+    tick();
+  }, 250);
+
+  const g = {
+    render() { if (!room && s.phase === "lobby") openRoom(); paint(); },
+    act(a) {
+      if (a === "start") return Spotify.connected ? startRound() : openSound();
+      if (a === "sound") return openSound();
+      if (a === "reopen") { if (room) room.close(); room = null; openRoom(); return paint(); }
+      if (a === "go") return s.phase === "intro" && startAnswer();
+      if (a === "endanswer") return finishAnswer();
+      if (a === "skip") { if (s.phase === "show" && !s.loading) { s.endsAt = 0; nextSong(); } return; }
+      if (a === "retry") return playCur();
+      if (a === "reveal") return reveal();
+      if (a === "next") { if (++s.mi < s.order.length) return startMatchup(); return showBoard(); }
+      if (a === "give") return giveSips(s.board.first, 2, p, () => { s.board.given = true; paint(); });
+      if (a === "nextround") return startRound();
+      if (a === "again") { s.ri = -1; s.score = {}; s.delta = {}; s.phase = "lobby"; paint(); return sync(); }
+    }
+  };
+  return g;
+}
+
+/* ---------- DJ Duel: the phone side ---------- */
+const DJP_KEY = "kletspotje:dj-me";
+const DJP = { peer: null, conn: null, code: "", name: "", names: [], taken: [], st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
+function djpJoin(code) {
+  code = String(code).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  const me = loadJ(DJP_KEY);
+  Object.assign(DJP, { code, name: me && me.code === code ? me.name : "", st: null, found: null, q: "", err: "", searching: false, edit: null });
+  $("#djpCode").textContent = code;
+  Music.stop();
+  show("djp"); djpConnect();
+  clearInterval(DJP.timer); DJP.timer = setInterval(djpTick, 250);
+}
+function djpConnect() {
+  DJP.status = "connecting"; djpRender();
+  loadLib("peer").then(() => {
+    if (DJP.peer) try { DJP.peer.destroy(); } catch (e) {}
+    const peer = new Peer({ debug: 0 }); DJP.peer = peer;
+    peer.on("open", () => {
+      const conn = peer.connect(djPeerId(DJP.code), { reliable: true, serialization: "json" }); DJP.conn = conn;
+      const to = setTimeout(() => { if (DJP.conn === conn && !conn.open) { DJP.status = "error"; DJP.err = "Couldn't reach the laptop. Being on the same Wi-Fi helps. Try again."; djpRender(); } }, 15000);
+      conn.on("open", () => { clearTimeout(to); DJP.status = "on"; DJP.err = ""; if (DJP.name) conn.send({ t: "hello", name: DJP.name }); djpRender(); });
+      conn.on("data", djpData);
+      conn.on("close", () => { if (DJP.conn === conn) { DJP.status = "lost"; djpRender(); } });
+    });
+    peer.on("error", (e) => {
+      if (DJP.peer !== peer) return;
+      DJP.status = "error";
+      DJP.err = e.type === "peer-unavailable" ? `There's no DJ Duel with code ${DJP.code} right now. Check the code on the laptop.` : "Connection problem (" + (e.type || e.message) + ").";
+      djpRender();
+    });
+  }).catch((e) => { DJP.status = "error"; DJP.err = e.message; djpRender(); });
+}
+function djpLeave() {
+  clearInterval(DJP.timer);
+  if (DJP.peer) try { DJP.peer.destroy(); } catch (e) {}
+  Object.assign(DJP, { peer: null, conn: null, st: null, status: "" });
+  show("home");
+}
+const djpSend = (m) => { if (DJP.conn && DJP.conn.open) DJP.conn.send(m); };
+function djpData(d) {
+  if (!d || typeof d !== "object") return;
+  if (d.t === "names") {
+    DJP.names = Array.isArray(d.names) ? d.names.map(String) : []; DJP.taken = Array.isArray(d.taken) ? d.taken.map(String) : [];
+    if (DJP.name && !DJP.names.includes(DJP.name)) { DJP.name = ""; DJP.st = null; }
+    return djpRender();
+  }
+  if (d.t === "state") {
+    const prev = DJP.st; DJP.st = d; DJP.endsAt = d.left ? Date.now() + d.left * 1000 : 0;
+    if (!prev || prev.phase !== d.phase || prev.gen !== d.gen) {
+      if (d.phase === "answer" && (!prev || prev.gen !== d.gen || prev.phase !== "answer")) Object.assign(DJP, { found: null, q: "", err: "", edit: null, searching: false });
+      if (navigator.vibrate && ((d.phase === "answer" && d.inGame) || (d.phase === "vote" && d.m && d.m.author < 0))) navigator.vibrate([120, 60, 120]);
+    }
+    return djpRender();
+  }
+  if (d.t === "results") {
+    DJP.searching = false; DJP.found = Array.isArray(d.items) ? d.items : [];
+    DJP.err = d.err ? String(d.err) : DJP.found.length ? "" : "Nothing found. Try another search.";
+    return djpRender();
+  }
+}
+function djpTick() {
+  const c = $("#djpClock");
+  if (c && DJP.endsAt) { const sec = Math.max(0, Math.ceil((DJP.endsAt - Date.now()) / 1000)); c.textContent = DJP.st && DJP.st.phase === "show" ? "0:" + String(sec).padStart(2, "0") : sec; }
+}
+function djpRender() {
+  if (!$("#djp").classList.contains("active")) return;
+  $("#djpDot").classList.toggle("on", DJP.status === "on");
+  const st = DJP.st, focused = document.activeElement && document.activeElement.id === "djpQ";
+  const center = (icon, title, sub) => `<div class="center"><div class="big">${icon}</div><p class="big-msg">${title}</p>${sub ? `<p class="sub">${sub}</p>` : ""}</div>`;
+  const prompt = (small, text) => `<div class="dj-theme"><small>${small}</small><b>${es(text)}</b></div>`;
+  const clockEl = `<div class="dj-clock"><b id="djpClock"></b></div>`;
+  let h;
+  if (DJP.status === "connecting") h = center("📡", "Connecting to the laptop…", "Hang on a second.");
+  else if (DJP.status !== "on") h = center("🔌", DJP.status === "lost" ? "Lost the connection" : "Couldn't connect", es(DJP.status === "lost" ? "The laptop closed the room, or your phone went to sleep." : DJP.err))
+    + `<button class="btn primary" data-p="retry">Reconnect</button><button class="btn ghost" data-p="leave">Use a different code</button>`;
+  else if (!DJP.name) h = center("🎧", "Who are you?", "Tap your name.")
+    + `<div class="name-grid">${DJP.names.map((x, i) => `<button class="name-btn" data-p="me" data-i="${i}">${es(x)}${DJP.taken.includes(x) ? " <small>📱</small>" : ""}</button>`).join("")}</div>
+      <p class="note">Not on the list? Ask the host to add you to the guest list and restart DJ Duel.</p>`;
+  else if (!st) h = center("🙌", "Joining…", "");
+  else if (st.phase === "lobby") h = center("🙌", `You're in, ${es(DJP.name)}!`, "Waiting for the host to start. Keep this screen open.") + `<button class="link" data-p="rename">Not ${es(DJP.name)}? Change</button>`;
+  else if (!st.inGame && st.phase !== "board" && st.phase !== "final") h = center("👀", "Round in progress", "You'll be in from the next round. Watch the laptop for now.");
+  else if (st.phase === "intro") h = center("🎧", es(st.round), es(st.sub) + "<br>Two prompts are coming your way…");
+  else if (st.phase === "answer") {
+    const mine = st.mine || [], k = DJP.edit != null ? DJP.edit : mine.findIndex((x) => !x.pick);
+    if (k >= 0 && mine[k]) {
+      h = `${clockEl}${prompt(`Prompt ${k + 1} of ${mine.length}`, mine[k].text)}
+        <div class="player-row"><input type="text" id="djpQ" placeholder="Search a song or artist" value="${es(DJP.q)}" autocomplete="off" spellcheck="false" enterkeyhint="search"><button class="btn primary" data-p="search">${DJP.searching ? "…" : "🔍"}</button></div>
+        ${DJP.err ? `<p class="error" style="text-align:left">${es(DJP.err)}</p>` : ""}
+        ${DJP.found ? `<div class="dj-results">${DJP.found.map((t, i) => djTrackBtn(t, `data-p="pick" data-k="${k}" data-i="${i}"`)).join("")}</div>` : `<p class="note">Funny and original beats "good".</p>`}
+        ${DJP.edit != null ? `<button class="btn ghost" data-p="noedit">Keep my old song</button>` : ""}`;
+    } else {
+      h = `${clockEl}${center("✅", "Both songs locked in!", `${es(st.done)}/${es(st.total)} players are done.`)}
+        ${mine.map((x, i) => `<div class="section"><p class="label">${es(x.text)}</p>${djTrackBtn(x.pick, "disabled", true)}<button class="link" data-p="edit" data-k="${i}">Change</button></div>`).join("")}`;
+    }
+  } else if (st.phase === "filling") h = center("🐌", "Time's up!", "Too slow? You get a safety song. Eyes on the laptop!");
+  else if (st.m && (st.phase === "show" || st.phase === "vote" || st.phase === "reveal")) {
+    const m = st.m, songs = m.songs || [];
+    const head = prompt(`${es(st.round)} · matchup ${es(m.n)} of ${es(m.of)}`, m.prompt);
+    if (st.phase === "show") {
+      const t = songs[m.cur];
+      h = `${head}${clockEl}<p class="big-msg center">▶ Song ${m.cur ? "B" : "A"}</p>${t ? djTrackBtn(t, "disabled", true) : ""}
+        <p class="sub center">${m.author === m.cur ? "🤫 That's your song! Poker face." : m.author >= 0 ? "This is your matchup. Your rival's song is playing." : "Listen up. You vote after both songs."}</p>`;
+    } else if (st.phase === "vote" && m.author >= 0) h = `${head}${clockEl}${center("🤞", "Your matchup!", "You can't vote on your own matchup. Fingers crossed.")}`;
+    else if (st.phase === "vote") {
+      h = `${head}${clockEl}<div class="dj-abs">${[0, 1].map((v) => { const t = songs[v] || {}; return `<button class="dj-ab ${v ? "b" : "a"}${m.vote === v ? " on" : m.vote != null ? " dim" : ""}" data-p="vote" data-v="${v}"><big>${v ? "B" : "A"}</big><em>${es(t.name)}</em><small>${es(t.artist)}</small></button>`; }).join("")}</div>
+        <p class="sub center">${m.vote != null ? "Vote locked in. You can change it until the reveal." : "Funniest or most original? Tap to vote."}</p>`;
+    } else if (m.res) {
+      const r = m.res, me = DJP.name, mi = r.authors.indexOf(me);
+      const line = mi >= 0 ? (r.win === mi ? `You won! +${r.pts[mi]} points${r.lash ? " · SONGLASH 💥" : ""}` : r.drink && r.drink.name === me ? `You lost. +${r.pts[mi]} points, and drink ${sips(r.drink.n)} 🍺` : `+${r.pts[mi]} points`)
+        : m.vote != null ? (r.win === m.vote ? "You backed the winner 🎉" : "Your pick lost.") : "";
+      h = `${head}${center(r.win < 0 ? "🤝" : r.lash ? "💥" : "🏆", r.win < 0 ? "Tie!" : `${es(r.authors[r.win])} wins!`, es(line))}
+        ${[0, 1].map((k) => songs[k] ? `<div class="np"${r.win === k ? ' style="background:rgba(255,204,51,.18);border-color:#ffcc33"' : ""}>${djSafeImg(songs[k].art) ? `<img src="${es(djSafeImg(songs[k].art))}" alt="">` : `<span class="np-art">🎵</span>`}<div><b>${r.win === k ? "👑 " : ""}${es(songs[k].name)}</b><span>${es(r.authors[k])} · ${es(r.v[k])} vote${r.v[k] === 1 ? "" : "s"} · +${es(r.pts[k])}</span></div></div>` : "").join("")}`;
+    } else h = center("🎧", "Hang tight…", "");
+  } else if ((st.phase === "board" || st.phase === "final") && st.board) {
+    const rows = st.board.rows || [], i = rows.findIndex((r) => r.name === DJP.name), r = rows[i];
+    h = center(st.phase === "final" ? (i === 0 ? "👑" : "🏁") : "📊", st.phase === "final" ? (i === 0 ? "You won DJ Duel!" : `${es(rows[0] && rows[0].name)} wins!`) : "Leaderboard",
+      r ? `You're <b>#${i + 1}</b> with ${es(r.score)} points${r.delta ? ` (+${es(r.delta)} this round)` : ""}.${(st.board.last || []).includes(DJP.name) ? " Last place: drink 2 🍺" : ""}` : "")
+      + `<div class="tally">${rows.map((x, k) => `<div><span>${k + 1}. ${es(x.name)}</span><b>${es(x.score)}</b></div>`).join("")}</div>`;
+  } else h = center("🎧", "Hang tight…", "");
+  $("#djpBody").innerHTML = h;
+  const q = $("#djpQ");
+  if (q) {
+    q.addEventListener("input", () => (DJP.q = q.value));
+    q.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); djpAct("search"); } });
+    if (focused) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+  }
+  djpTick();
+}
+function djpAct(a, el) {
+  if (a === "retry") return djpConnect();
+  if (a === "leave") { djpLeave(); $("#btnJoin").click(); return; }
+  if (a === "me") {
+    const name = DJP.names[+el.dataset.i]; if (!name) return;
+    if (DJP.taken.includes(name) && !confirm(`${name} is already connected on another phone. Is this you?`)) return;
+    DJP.name = name; DJP.st = null; saveJ(DJP_KEY, { code: DJP.code, name });
+    djpSend({ t: "hello", name }); return djpRender();
+  }
+  if (a === "rename") { DJP.name = ""; DJP.st = null; saveJ(DJP_KEY, null); djpConnect(); return; }
+  if (a === "search") {
+    const q = ($("#djpQ") || {}).value || DJP.q; DJP.q = q.trim(); if (!DJP.q) return;
+    DJP.searching = true; DJP.err = ""; djpSend({ t: "search", q: DJP.q }); if (document.activeElement) document.activeElement.blur(); return djpRender();
+  }
+  if (a === "pick") {
+    const k = +el.dataset.k, t = DJP.found && DJP.found[+el.dataset.i];
+    djpSend({ t: "pick", k, i: +el.dataset.i });
+    if (t && DJP.st && DJP.st.mine && DJP.st.mine[k]) DJP.st.mine[k].pick = t; // show it straight away; the laptop confirms
+    Object.assign(DJP, { found: null, q: "", edit: null, err: "" });
+    tone(880, 0.06, "triangle", 0.06); if (navigator.vibrate) navigator.vibrate(30);
+    return djpRender();
+  }
+  if (a === "edit") { Object.assign(DJP, { edit: +el.dataset.k, found: null, q: "", err: "" }); return djpRender(); }
+  if (a === "noedit") { DJP.edit = null; return djpRender(); }
+  if (a === "vote") { const v = +el.dataset.v; DJP.st.m.vote = v; djpSend({ t: "vote", v }); tone(900, 0.05, "triangle", 0.06); if (navigator.vibrate) navigator.vibrate(30); return djpRender(); }
+}
+$("#djpBody").addEventListener("click", (e) => { const el = e.target.closest("[data-p]"); if (el && !el.disabled) djpAct(el.dataset.p, el); });
+$("#djpExit").addEventListener("click", () => { if (confirm("Leave the DJ Duel?")) djpLeave(); });
+// Phones sleep and drop the link: reconnect as soon as the screen is back on.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && $("#djp").classList.contains("active") && DJP.status !== "connecting" && !(DJP.conn && DJP.conn.open)) djpConnect();
+});
 
 show("home");
+// Opened from a DJ Duel QR code: join the laptop's room straight away.
+{ const dj = new URLSearchParams(location.search).get("dj"); if (dj) { history.replaceState(null, "", location.pathname); djpJoin(dj); } }
 </script>
 </body>
 </html>
