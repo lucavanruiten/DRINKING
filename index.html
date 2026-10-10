@@ -6289,8 +6289,8 @@ function makeDJ(p) {
       }
     } else if (s.phase === "board" || s.phase === "final") {
       const b = s.board, fin = s.phase === "final";
-      main = `<div class="dj-round small"><small>${fin ? "Game over" : esc(RD().name) + " done"}</small><b>${fin ? `👑 ${esc(b.rows[0].name)} wins!` : "Leaderboard"}</b></div>
-        <div class="dj-board">${b.rows.map((r, i) => `<div class="dj-brow" style="animation-delay:${i * 0.08}s"><span class="rk">${i + 1}</span><span class="nm">${i === 0 ? "👑 " : ""}${esc(r.name)}</span>
+      main = `<div class="dj-round small"><small>${fin ? "Game over" : esc(RD().name) + " done"}</small><b>${fin ? (b.first ? `👑 ${esc(b.first)} wins!` : "It's a tie at the top!") : "Leaderboard"}</b></div>
+        <div class="dj-board">${b.rows.map((r, i) => `<div class="dj-brow" style="animation-delay:${i * 0.08}s"><span class="rk">${1 + b.rows.filter((x) => x.score > r.score).length}</span><span class="nm">${r.score === b.rows[0].score && r.score ? "👑 " : ""}${esc(r.name)}</span>
           ${r.delta ? `<em>+${r.delta}</em>` : ""}<b data-from="${r.score - r.delta}" data-to="${r.score}">${r.score - r.delta}</b></div>`).join("")}</div>`;
       side = `<div class="fate"><small>${fin ? "Final round" : "End of " + esc(RD().name)}</small>
           <p>${b.last.length ? `Last place: ${b.last.map(esc).join(" & ")} drink${b.last.length > 1 ? "" : "s"} 2.` : "All tied up. Nobody drinks."}</p>
@@ -6455,10 +6455,11 @@ function djpRender() {
         ${[0, 1].map((k) => songs[k] ? `<div class="np"${r.win === k ? ' style="background:rgba(255,204,51,.18);border-color:#ffcc33"' : ""}>${djSafeImg(songs[k].art) ? `<img src="${es(djSafeImg(songs[k].art))}" alt="">` : `<span class="np-art">🎵</span>`}<div><b>${r.win === k ? "👑 " : ""}${es(songs[k].name)}</b><span>${es(r.authors[k])} · ${es(r.v[k])} vote${r.v[k] === 1 ? "" : "s"} · +${es(r.pts[k])}</span></div></div>` : "").join("")}`;
     } else h = center("🎧", "Hang tight…", "");
   } else if ((st.phase === "board" || st.phase === "final") && st.board) {
-    const rows = st.board.rows || [], i = rows.findIndex((r) => r.name === DJP.name), r = rows[i];
-    h = center(st.phase === "final" ? (i === 0 ? "👑" : "🏁") : "📊", st.phase === "final" ? (i === 0 ? "You won DJ Duel!" : `${es(rows[0] && rows[0].name)} wins!`) : "Leaderboard",
+    const rows = st.board.rows || [], r = rows.find((x) => x.name === DJP.name), rk = (x) => 1 + rows.filter((y) => y.score > x.score).length;
+    const i = r ? rk(r) - 1 : -1, champ = st.board.first;
+    h = center(st.phase === "final" ? (champ === DJP.name ? "👑" : "🏁") : "📊", st.phase === "final" ? (champ === DJP.name ? "You won DJ Duel!" : champ ? `${es(champ)} wins!` : "It's a tie at the top!") : "Leaderboard",
       r ? `You're <b>#${i + 1}</b> with ${es(r.score)} points${r.delta ? ` (+${es(r.delta)} this round)` : ""}.${(st.board.last || []).includes(DJP.name) ? " Last place: drink 2 🍺" : ""}` : "")
-      + `<div class="tally">${rows.map((x, k) => `<div><span>${k + 1}. ${es(x.name)}</span><b>${es(x.score)}</b></div>`).join("")}</div>`;
+      + `<div class="tally">${rows.map((x) => `<div><span>${rk(x)}. ${es(x.name)}</span><b>${es(x.score)}</b></div>`).join("")}</div>`;
   } else h = center("🎧", "Hang tight…", "");
   $("#djpBody").innerHTML = h;
   const q = $("#djpQ");
