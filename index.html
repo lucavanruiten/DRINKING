@@ -726,6 +726,10 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .dj-avs button { background: none; border: 0; padding: 0; aspect-ratio: 1; }
 .dj-avs .dj-av { --s: 100%; transition: transform .15s; }
 .dj-avs button.on .dj-av { outline: 4px solid #b8f135; outline-offset: 3px; transform: scale(1.06) rotate(-4deg); }
+.dj-av.photo { object-position: 50% 50%; background: #fff; }
+.dj-avs .dj-up { position: relative; }
+.dj-avs .dj-up .dj-av { font-size: 34px; display: grid; place-items: center; background: var(--surface-2); border-style: dashed; }
+.dj-avs .dj-up small { position: absolute; left: 50%; bottom: -4px; translate: -50% 0; white-space: nowrap; font-weight: 800; font-size: 11px; background: var(--accent); color: var(--accent-ink); border: 2px solid var(--ink); border-radius: 99px; padding: 1px 7px; }
 .dj-avs button.taken { opacity: .25; filter: grayscale(1); }
 .dj-crowd { display: flex; flex-wrap: wrap; gap: 16px 18px; justify-content: center; padding: 6px 0; }
 .dj-crowd button { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; color: inherit; font-weight: 800; font-size: 16px; max-width: 120px;
@@ -737,6 +741,17 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .dj-votes i.dj-who { gap: 4px; padding: 2px 8px 2px 2px; }
 .djp-dot { width: 12px; height: 12px; border-radius: 50%; background: #ff3d3d; border: 2px solid var(--ink); flex: none; }
 .djp-dot.on { background: #b8f135; }
+/* Laptop background: every avatar in a bubble, bouncing around (DVD style). Calmer while songs play. */
+#djBubbles { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: .5; transition: opacity .8s; }
+.dj-intro { text-shadow: 0 0 3px var(--ink), 0 2px 8px var(--ink), 0 0 14px var(--ink); }
+#djBubbles.calm { opacity: .16; }
+#djBubbles .djb { position: absolute; left: 0; top: 0; width: var(--d); height: var(--d); border-radius: 50%; will-change: transform; }
+#djBubbles .djb img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 12%; display: block; border: 2.5px solid rgba(255,255,255,.55); box-shadow: 0 0 0 3px rgba(7,3,15,.5), 6px 8px 0 rgba(7,3,15,.45); }
+#djBubbles .djb img.photo { object-position: 50% 50%; }
+#djBubbles .djb::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 30% 26%, rgba(255,255,255,.75) 0 7%, rgba(255,255,255,.18) 13%, transparent 34%), radial-gradient(circle at 50% 50%, transparent 58%, rgba(255,255,255,.22) 72%, transparent 76%); }
+#djBubbles .djb.in { animation: djbIn .6s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes djbIn { from { opacity: 0; } }
 .dj-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
 .dj-tabs button { color: inherit; font-family: var(--display); font-weight: 800; font-size: 16px; border: 2.5px solid var(--ink); border-radius: 99px; padding: 8px 18px; background: var(--surface-2); box-shadow: 0 3px 0 var(--ink); }
 .dj-tabs button.on { background: var(--accent); color: var(--accent-ink); rotate: -2deg; }
@@ -960,6 +975,7 @@ input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px co
 </head>
 <body data-mode="casual">
 <div id="bgfx" aria-hidden="true"></div>
+<div id="djBubbles" aria-hidden="true"></div>
 <div class="wrap">
 
   <!-- HOME -->
@@ -1176,6 +1192,7 @@ input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px co
       <span class="djp-dot" id="djpDot"></span>
     </div>
     <div class="dg-body" id="djpBody"></div>
+    <input type="file" id="djpFile" accept="image/*" hidden>
   </section>
 
   <!-- GAME -->
@@ -6021,9 +6038,91 @@ const djFill = (q, x) => q.replace(/\{name\}/gi, x);
 const DJ_ROUNDS = [{ name: "Round 1", sub: "Normal points", mult: 1 }, { name: "Round 2", sub: "Double points!", mult: 2 }, { name: "The silly round", sub: "Silly prompts · double points", mult: 2, silly: true }];
 const DJ_SITE = "https://lucavanruiten.github.io/DRINKING/";
 // Avatars (images/avatars/*.png, cut-outs on transparent backgrounds). Each player gets their own while there are free ones.
-const DJ_AVATARS = ["actor", "bin", "bonnie", "famke", "gerard", "gordon", "humberto", "jeroen", "job retski", "judeska", "kim holland", "patricia", "pepita queen", "charli", "ilona", "party_till_I_die", "alex_consani", "ariana", "elijah", "kanye", "lil_nas", "rupaul", "aapje", "demi", "fly", "jessie", "john_pork", "patrick", "walter_white"];
+const DJ_AVATARS = ["actor", "bin", "bonnie", "famke", "gerard", "gordon", "humberto", "jeroen", "job retski", "judeska", "kim holland", "patricia", "pepita queen", "charli", "ilona", "party_till_I_die", "alex_consani", "ariana", "elijah", "kanye", "lil_nas", "rupaul", "aapje", "demi", "fly", "jessie", "john_pork", "patrick", "walter_white", "vape"];
 const djAvOk = (i) => Number.isInteger(i) && i >= 0 && i < DJ_AVATARS.length;
+// Players can also use their own photo: a small square JPEG, id "p:<hash>". The laptop collects them from the hello messages,
+// and phones ask the laptop for the ones they don't have yet (getpic → pic).
+const DJ_PICS = {};
+const djPicOk = (d) => typeof d === "string" && d.length <= 60000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(d);
+const djPicId = (d) => { let h = 5381; for (let i = 0; i < d.length; i++) h = ((h * 33) ^ d.charCodeAt(i)) >>> 0; return "p:" + h.toString(36) + d.length.toString(36); };
+const djIsPic = (i) => typeof i === "string" && /^p:[a-z0-9]{1,20}$/.test(i);
+const djAvAny = (i) => djAvOk(i) || djIsPic(i);
+// Crop a picked photo to a square (a bit above the middle on portraits, where faces usually are) and shrink it to fit in one relay message.
+function djMakePic(file) {
+  return new Promise((ok, no) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const S = 192, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(w, h), c = document.createElement("canvas");
+      c.width = c.height = S;
+      const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, S, S);
+      ctx.drawImage(img, (w - k) / 2, (h - k) * 0.3, k, k, 0, 0, S, S);
+      let q = 0.8, d;
+      do { d = c.toDataURL("image/jpeg", q); q -= 0.15; } while (d.length > 40000 && q > 0.2);
+      djPicOk(d) ? ok(d) : no(new Error("That picture didn't work. Try another one."));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); no(new Error("Couldn't read that file. Try a JPG or PNG photo.")); };
+    img.src = url;
+  });
+}
+// The bouncing avatar bubbles behind DJ Duel on the laptop. djBubbles.set(ids) adds/removes bubbles (stock indexes and photo ids);
+// the loop runs only while there are bubbles and stops by itself when DJ Duel closes.
+const djBubbles = (() => {
+  const B = new Map(); let raf = 0, last = 0, owner = null;
+  const layer = () => $("#djBubbles");
+  function add(id, pop) {
+    const el = document.createElement("div"), W = innerWidth, H = innerHeight;
+    const d = Math.round(Math.min(W, H) * (0.09 + Math.random() * 0.07) + (djIsPic(id) ? 14 : 0));
+    el.className = "djb" + (pop ? " in" : ""); el.style.setProperty("--d", d + "px");
+    el.innerHTML = djAv(id).replace(/ style="[^"]*"/, djAvOk(id) ? ` style="background-color:hsl(${(id * 53) % 360} 85% 62%)"` : "");
+    const a = Math.random() * Math.PI * 2, v = (40 + Math.random() * 50) * (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0.3 : 1); // px per second
+    const b = { el, r: d / 2, x: d / 2 + Math.random() * Math.max(1, W - d), y: d / 2 + Math.random() * Math.max(1, H - d), vx: Math.cos(a) * v, vy: Math.sin(a) * v, sq: 0, rot: Math.random() * 30 - 15 };
+    layer().appendChild(el); B.set(id, b);
+  }
+  function step(now) {
+    if (owner && G !== owner) return api.stop();
+    const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+    const W = innerWidth, H = innerHeight, list = [...B.values()];
+    for (const b of list) {
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx); b.sq = 1; } else if (b.x > W - b.r) { b.x = W - b.r; b.vx = -Math.abs(b.vx); b.sq = 1; }
+      if (b.y < b.r) { b.y = b.r; b.vy = Math.abs(b.vy); b.sq = 1; } else if (b.y > H - b.r) { b.y = H - b.r; b.vy = -Math.abs(b.vy); b.sq = 1; }
+    }
+    // Bubbles bounce off each other too (equal mass, elastic).
+    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+      const p = list[i], q = list[j], dx = q.x - p.x, dy = q.y - p.y, min = p.r + q.r, d2 = dx * dx + dy * dy;
+      if (d2 >= min * min || d2 === 0) continue;
+      const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, over = (min - d) / 2;
+      p.x -= nx * over; p.y -= ny * over; q.x += nx * over; q.y += ny * over;
+      const rel = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny;
+      if (rel < 0) { p.vx += rel * nx; p.vy += rel * ny; q.vx -= rel * nx; q.vy -= rel * ny; p.sq = q.sq = 1; }
+    }
+    for (const b of list) {
+      b.sq *= Math.pow(0.02, dt); // the squish fades out in about a second
+      const s = 0.1 * b.sq;
+      b.el.style.transform = `translate(${b.x - b.r}px, ${b.y - b.r}px) rotate(${b.rot}deg) scale(${1 + s}, ${1 - s})`;
+    }
+    raf = requestAnimationFrame(step);
+  }
+  const api = {
+    set(ids, game) {
+      owner = game;
+      const want = new Set(ids);
+      for (const [id, b] of B) if (!want.has(id)) { b.el.remove(); B.delete(id); }
+      const first = !B.size;
+      ids.forEach((id) => { if (!B.has(id)) add(id, !first); });
+      if (!raf) { last = 0; raf = requestAnimationFrame(step); }
+    },
+    calm(on) { layer().classList.toggle("calm", !!on); },
+    stop() { cancelAnimationFrame(raf); raf = 0; owner = null; B.forEach((b) => b.el.remove()); B.clear(); layer().classList.remove("calm"); }
+  };
+  return api;
+})();
 function djAv(i, size, cls = "") {
+  if (djIsPic(i)) {
+    const st = size ? `--s:${size}px` : "";
+    return DJ_PICS[i] ? `<img class="dj-av photo ${cls}" src="${DJ_PICS[i]}" alt="" style="${st}">` : `<span class="dj-av ph ${cls}" style="${st}">📷</span>`;
+  }
   const st = (size ? `--s:${size}px;` : "") + (djAvOk(i) ? `background-color:hsl(${(i * 53) % 360} 85% 62%)` : "");
   return djAvOk(i) ? `<img class="dj-av ${cls}" src="images/avatars/${encodeURIComponent(DJ_AVATARS[i])}.png" alt="" style="${st}">` : `<span class="dj-av ph ${cls}" style="${st}">🎧</span>`;
 }
@@ -6119,6 +6218,7 @@ function djRoom(h) {
     const me = room.seen.get(id) || { name: null, t: 0 };
     me.t = Date.now(); room.seen.set(id, me);
     if (d.t === "bye") return drop(id);
+    if (d.t === "getpic") { if (djIsPic(d.id) && DJ_PICS[d.id]) to(id, { t: "pic", id: d.id, d: DJ_PICS[d.id] }); return; }
     if (d.t === "leave") { // "not me, change my name"
       const nm = me.name; release(id);
       if (nm && h.removable(nm)) room.players.delete(nm.toLowerCase());
@@ -6140,10 +6240,11 @@ function djRoom(h) {
         if (room.players.size >= 16) return to(id, { t: "full" });
         pl = { name, secret, id: null, av: -1 }; room.players.set(name.toLowerCase(), pl);
       }
-      // Avatar: keep the wish if it's free, otherwise a random free one (doubles only once all are taken).
+      // Avatar: their own photo, or keep the wish if it's free, otherwise a random free one (doubles only once all are taken).
       const used = new Set(takenAvs(pl)), want = djAvOk(d.av) ? d.av : -1;
       const free = DJ_AVATARS.map((_, i) => i).filter((i) => !used.has(i));
-      pl.av = want >= 0 && !used.has(want) ? want : free.length ? (free.includes(pl.av) ? pl.av : free[rand(free.length)]) : want >= 0 ? want : rand(DJ_AVATARS.length);
+      if (djPicOk(d.pic)) { pl.av = djPicId(d.pic); DJ_PICS[pl.av] = d.pic; }
+      else pl.av = want >= 0 && !used.has(want) ? want : free.length ? (free.includes(pl.av) ? pl.av : free[rand(free.length)]) : want >= 0 ? want : rand(DJ_AVATARS.length);
       if (pl.id && pl.id !== id) { const o = room.seen.get(pl.id); if (o) o.name = null; to(pl.id, { t: "kicked", why: "elsewhere" }); }
       if (me.name && me.name !== pl.name) release(id);
       pl.secret = secret; pl.id = id; me.name = pl.name; room.conns.set(pl.name, id);
@@ -6428,7 +6529,7 @@ function makeDJ() {
             : err ? `<p class="error" style="text-align:left">${esc(err)}</p><button class="btn" data-a="reopen">Try again</button>` : `<p class="big-msg">Opening the room…</p>`}
         </div></div>
         ${names.length ? `<div class="dj-crowd">${names.map((x, i) => `<button class="${online(x) ? "" : "off"}" data-a="kick" data-i="${i}" title="Tap to remove">${djAv(avOf(x))}<span>${esc(x)}</span></button>`).join("")}</div>`
-          : `<div class="center"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${s.cfg.answer} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`}`;
+          : `<div class="center dj-intro"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${s.cfg.answer} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`}`;
       if (s.tab === "set") main = settingsView();
       main = `<div class="dj-tabs"><button class="${s.tab === "set" ? "" : "on"}" data-a="tab" data-v="join">📱 Join</button><button class="${s.tab === "set" ? "on" : ""}" data-a="tab" data-v="set">⚙️ Settings</button></div>` + main;
       side = `<div class="section"><p class="label">Who's in · ${cnt} ${cnt === 1 ? "phone" : "phones"}</p>
@@ -6484,6 +6585,9 @@ function makeDJ() {
     // Phones joining repaint the lobby, so keep whatever the host is typing in the custom prompt field.
     const ci = $("#djCustIn"), keep = ci && { v: ci.value, f: document.activeElement === ci, at: ci.selectionStart };
     R(`<div class="gl"><div class="gl-main">${main}</div><div class="gl-side">${side}</div></div>`);
+    // Background bubbles: every stock avatar, plus the players' own photos.
+    djBubbles.set(DJ_AVATARS.map((_, i) => i).concat(all().map(avOf).filter(djIsPic)), g);
+    djBubbles.calm(s.phase === "show" || s.phase === "vote" || s.phase === "reveal");
     const ni = $("#djCustIn");
     if (ni && keep) { ni.value = keep.v; if (keep.f) { ni.focus(); ni.setSelectionRange(keep.at, keep.at); } }
     clock();
@@ -6567,14 +6671,22 @@ function makeDJ() {
 
 /* ---------- DJ Duel: the phone side ---------- */
 const DJP_KEY = "kletspotje:dj-me";
-const DJP = { client: null, id: "", T: "", run: 0, ping: null, code: "", name: "", joined: false, draft: "", secret: "", av: -1, taken: [], st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
+const djpSave = () => saveJ(DJP_KEY, { code: DJP.code, name: DJP.name, secret: DJP.secret, av: DJP.av, pic: DJP.pic || "" });
+// Ask the laptop for other players' photos this phone doesn't have yet (again after a few seconds if the answer got lost).
+function djpWantPics(avs) {
+  const now = Date.now();
+  Object.values(avs || {}).forEach((i) => { if (djIsPic(i) && !DJ_PICS[i] && now - (DJP.asked[i] || 0) > 4000) { DJP.asked[i] = now; djpSend({ t: "getpic", id: i }); } });
+}
+const DJP = { asked: {}, pic: "", client: null, id: "", T: "", run: 0, ping: null, code: "", name: "", joined: false, draft: "", secret: "", av: -1, taken: [], st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
 function djpJoin(code) {
   code = String(code).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
   const me = loadJ(DJP_KEY) || {};
   // The secret identifies this phone, so it can take its own name back after a reload.
   const secret = me.secret || djUid() + djUid();
   saveJ(DJP_KEY, { ...me, secret });
-  Object.assign(DJP, { code, secret, name: me.code === code ? me.name || "" : "", joined: false, draft: me.name || "", av: djAvOk(me.av) ? me.av : -1, taken: [], key: "", st: null, found: null, q: "", err: "", searching: false, edit: null });
+  const pic = djPicOk(me.pic) ? me.pic : "";
+  if (pic) DJ_PICS[djPicId(pic)] = pic;
+  Object.assign(DJP, { code, secret, name: me.code === code ? me.name || "" : "", joined: false, draft: me.name || "", pic, av: djAvOk(me.av) || (pic && me.av === djPicId(pic)) ? me.av : -1, taken: [], key: "", st: null, found: null, q: "", err: "", searching: false, edit: null });
   $("#djpCode").textContent = code;
   Music.stop();
   show("djp"); djpConnect();
@@ -6641,20 +6753,20 @@ function djpLeave() {
   Object.assign(DJP, { st: null, status: "" });
   show("home");
 }
-const djpHello = () => { if (DJP.name) djpSend({ t: "hello", name: DJP.name, secret: DJP.secret, av: DJP.av }); };
+const djpHello = () => { if (DJP.name) djpSend({ t: "hello", name: DJP.name, secret: DJP.secret, av: DJP.av, pic: djIsPic(DJP.av) ? DJP.pic : undefined }); };
 const djpSend = (m) => { const c = DJP.client; if (c && c.connected) c.publish(DJP.T + "/up/" + DJP.id, JSON.stringify(m), { qos: 0 }); };
 function djpData(d) {
   if (!d || typeof d !== "object") return;
   if (d.t === "joined") {
-    Object.assign(DJP, { name: String(d.name), joined: true, err: "", av: djAvOk(d.av) ? d.av : DJP.av });
-    saveJ(DJP_KEY, { code: DJP.code, name: DJP.name, secret: DJP.secret, av: DJP.av });
+    Object.assign(DJP, { name: String(d.name), joined: true, err: "", av: djAvAny(d.av) ? d.av : DJP.av });
+    djpSave();
     return djpRender();
   }
   if (d.t === "avs") { // which avatars other players already have
     const taken = Array.isArray(d.taken) ? d.taken.filter(djAvOk) : [];
     let changed = taken.join() !== DJP.taken.join();
     DJP.taken = taken;
-    if (!djAvOk(DJP.av) || (taken.includes(DJP.av) && taken.length < DJ_AVATARS.length)) { // preselect a random free one
+    if (!djIsPic(DJP.av) && (!djAvOk(DJP.av) || taken.includes(DJP.av) && taken.length < DJ_AVATARS.length)) { // preselect a random free one
       const free = DJ_AVATARS.map((_, i) => i).filter((i) => !taken.includes(i));
       DJP.av = free.length ? free[rand(free.length)] : rand(DJ_AVATARS.length);
       changed = true;
@@ -6667,12 +6779,19 @@ function djpData(d) {
     Object.assign(DJP, { name: "", joined: false, st: null, key: "", draft: was || DJP.draft });
     DJP.err = d.t === "nametaken" ? `"${was}" is already taken. Pick another name.` : d.t === "full" ? "The game is full (16 players)."
       : d.t === "badname" ? "Type a name first." : d.why === "host" ? "The host removed you. You can join again with another name." : "You joined from another device.";
-    saveJ(DJP_KEY, { code: DJP.code, name: "", secret: DJP.secret, av: DJP.av });
+    djpSave();
     return djpRender();
+  }
+  if (d.t === "pic") { // a photo we asked for; several can arrive at once, so redraw once
+    if (!djIsPic(d.id) || !djPicOk(d.d) || djPicId(d.d) !== d.id || DJ_PICS[d.id]) return;
+    DJ_PICS[d.id] = d.d;
+    clearTimeout(DJP.picT); DJP.picT = setTimeout(djpRender, 150);
+    return;
   }
   if (d.t === "state") {
     if (!DJP.joined) return;
     if (DJP.st && d.seq < DJP.st.seq) return; // a late, older update
+    djpWantPics(d.avs);
     const key = JSON.stringify({ ...d, left: 0 });
     DJP.endsAt = d.left ? Date.now() + d.left * 1000 : 0;
     if (key === DJP.key) return; // the regular catch-up: nothing changed, so don't redraw
@@ -6707,7 +6826,9 @@ function djpRender() {
       <div class="player-row"><input type="text" id="djpName" maxlength="16" placeholder="Your name" value="${es(DJP.draft)}" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go"><button class="btn primary" data-p="join">Join</button></div>
       ${DJP.err ? `<p class="error" style="text-align:left">${es(DJP.err)}</p>` : ""}
       <p class="label">Pick your avatar</p>
-      <div class="dj-avs">${DJ_AVATARS.map((_, i) => { const tk = DJP.taken.includes(i) && !allTaken; return `<button class="${i === DJP.av ? "on" : ""}${tk ? " taken" : ""}" data-p="av" data-i="${i}"${tk ? " disabled" : ""} aria-label="Avatar ${i + 1}">${djAv(i)}</button>`; }).join("")}</div>`;
+      <div class="dj-avs">${DJP.pic ? `<button class="${djIsPic(DJP.av) ? "on" : ""}" data-p="mypic" aria-label="My photo">${djAv(djPicId(DJP.pic))}</button>` : ""}
+        <button class="dj-up" data-p="photo" aria-label="Upload your own photo"><span class="dj-av ph">${DJP.picBusy ? "⏳" : "📷"}</span><small>${DJP.pic ? "New photo" : "Your photo"}</small></button>
+        ${DJ_AVATARS.map((_, i) => { const tk = DJP.taken.includes(i) && !allTaken; return `<button class="${i === DJP.av ? "on" : ""}${tk ? " taken" : ""}" data-p="av" data-i="${i}"${tk ? " disabled" : ""} aria-label="Avatar ${i + 1}">${djAv(i)}</button>`; }).join("")}</div>`;
   }
   else if (!DJP.joined || !st) h = center("🙌", "Joining…", "");
   else if (st.phase === "lobby") h = `<div class="center">${djAv(DJP.av, 150, "pop")}<p class="big-msg">You're in, ${es(DJP.name)}!</p><p class="sub">Look for yourself on the laptop. Waiting for the host to start.</p></div>`
@@ -6777,11 +6898,13 @@ function djpAct(a, el) {
     if (document.activeElement) document.activeElement.blur();
     djpHello(); return djpRender();
   }
+  if (a === "photo") { const f = $("#djpFile"); f.value = ""; return f.click(); }
+  if (a === "mypic") { if (DJP.pic) { DJP.av = djPicId(DJP.pic); tone(900, 0.05, "triangle", 0.06); } return djpRender(); }
   if (a === "av") { DJP.av = +el.dataset.i; tone(700 + DJP.av * 40, 0.05, "triangle", 0.06); return djpRender(); }
   if (a === "rename") {
     djpSend({ t: "leave" }); djpSend({ t: "hi" }); // free my avatar, then get the current list of taken ones
     Object.assign(DJP, { draft: DJP.name, name: "", joined: false, st: null, key: "", err: "" });
-    saveJ(DJP_KEY, { code: DJP.code, name: "", secret: DJP.secret });
+    djpSave();
     return djpRender();
   }
   if (a === "search") {
@@ -6806,6 +6929,14 @@ function djpAct(a, el) {
   if (a === "noedit") { DJP.edit = null; return djpRender(); }
   if (a === "vote") { const v = +el.dataset.v; DJP.st.m.vote = v; djpSend({ t: "vote", v }); tone(900, 0.05, "triangle", 0.06); if (navigator.vibrate) navigator.vibrate(30); return djpRender(); }
 }
+$("#djpFile").addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  DJP.picBusy = true; DJP.err = ""; djpRender();
+  djMakePic(file).then((d) => { DJP.pic = d; DJP.av = djPicId(d); DJ_PICS[DJP.av] = d; djpSave(); tone(880, 0.06, "triangle", 0.08); tone(1320, 0.08, "triangle", 0.06, 0.06); })
+    .catch((er) => { DJP.err = er.message; })
+    .finally(() => { DJP.picBusy = false; djpRender(); });
+});
 $("#djpBody").addEventListener("click", (e) => { const el = e.target.closest("[data-p]"); if (el && !el.disabled) djpAct(el.dataset.p, el); });
 $("#djpExit").addEventListener("click", () => { if (confirm("Leave the DJ Duel?")) djpLeave(); });
 // Phones sleep and drop the link: reconnect as soon as the screen is back on.
