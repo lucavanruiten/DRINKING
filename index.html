@@ -717,6 +717,24 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .dj-voters { display: flex; flex-direction: column; gap: 6px; }
 .dj-voters > div { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: var(--surface-2); font-weight: 700; }
 .dj-voters em { font-style: normal; color: #b8f135; }
+.dj-av { width: var(--s, 72px); height: var(--s, 72px); border-radius: 50%; object-fit: cover; object-position: 50% 12%; border: 2.5px solid var(--ink); box-shadow: 2px 3px 0 var(--ink);
+  flex: none; display: inline-grid; place-items: center; vertical-align: middle; background: var(--surface-2); font-size: calc(var(--s, 72px) * .5); }
+.dj-av.pop { animation: slap .45s cubic-bezier(.2,1.4,.4,1); border-width: 4px; box-shadow: 5px 6px 0 var(--ink); }
+.dj-who { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.dj-rc img.dj-av, .np img.dj-av, .np .dj-av { width: var(--s, 72px); height: var(--s, 72px); aspect-ratio: auto; border-radius: 50%; object-fit: cover; font-size: calc(var(--s, 72px) * .5); }
+.dj-avs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.dj-avs button { background: none; border: 0; padding: 0; aspect-ratio: 1; }
+.dj-avs .dj-av { --s: 100%; transition: transform .15s; }
+.dj-avs button.on .dj-av { outline: 4px solid #b8f135; outline-offset: 3px; transform: scale(1.06) rotate(-4deg); }
+.dj-avs button.taken { opacity: .25; filter: grayscale(1); }
+.dj-crowd { display: flex; flex-wrap: wrap; gap: 16px 18px; justify-content: center; padding: 6px 0; }
+.dj-crowd button { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; color: inherit; font-weight: 800; font-size: 16px; max-width: 120px;
+  animation: slap .45s cubic-bezier(.2,1.4,.4,1) both; }
+.dj-crowd button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.dj-crowd button:nth-child(odd) .dj-av { rotate: -4deg; } .dj-crowd button:nth-child(even) .dj-av { rotate: 3deg; }
+.dj-crowd .dj-av { --s: clamp(70px, 12dvh, 110px); border-width: 3px; box-shadow: 4px 5px 0 var(--ink); }
+.dj-crowd button.off { opacity: .4; filter: grayscale(.8); }
+.dj-votes i.dj-who { gap: 4px; padding: 2px 8px 2px 2px; }
 .djp-dot { width: 12px; height: 12px; border-radius: 50%; background: #ff3d3d; border: 2px solid var(--ink); flex: none; }
 .djp-dot.on { background: #b8f135; }
 #djp .center .big { font-size: 72px; line-height: 1; }
@@ -5964,6 +5982,13 @@ const DJ_SAFETY = [
 const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15;
 const DJ_ROUNDS = [{ name: "Round 1", sub: "Normal points", mult: 1 }, { name: "Round 2", sub: "Double points!", mult: 2 }, { name: "The silly round", sub: "Silly prompts · double points", mult: 2, silly: true }];
 const DJ_SITE = "https://lucavanruiten.github.io/DRINKING/";
+// Avatars (images/avatars/*.png, cut-outs on transparent backgrounds). Each player gets their own while there are free ones.
+const DJ_AVATARS = ["actor", "bin", "bonnie", "famke", "gerard", "gordon", "humberto", "jeroen", "job retski", "judeska", "kim holland", "patricia", "pepita queen"];
+const djAvOk = (i) => Number.isInteger(i) && i >= 0 && i < DJ_AVATARS.length;
+function djAv(i, size, cls = "") {
+  const st = (size ? `--s:${size}px;` : "") + (djAvOk(i) ? `background-color:hsl(${(i * 53) % 360} 85% 62%)` : "");
+  return djAvOk(i) ? `<img class="dj-av ${cls}" src="images/avatars/${encodeURIComponent(DJ_AVATARS[i])}.png" alt="" style="${st}">` : `<span class="dj-av ph ${cls}" style="${st}">🎧</span>`;
+}
 const DJ_LIBS = { mqtt: "https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js", qr: "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" };
 const libP = {};
 // Load a library on demand (only DJ Duel needs these), once.
@@ -6033,7 +6058,8 @@ function djTrackBtn(t, attr, on) {
 // Topics: <room>/host (retained "the room is open"), <room>/up/<phoneId> (phone → laptop), <room>/down/<phoneId> (laptop → phone).
 function djRoom(h) {
   const room = { code: "", status: "starting", err: "", conns: new Map() /* name → phoneId */, seen: new Map() /* phoneId → { name, t } */,
-    players: new Map() /* lower-case name → { name, secret, id } */, clients: [], dead: false };
+    players: new Map() /* lower-case name → { name, secret, id, av } */, clients: [], dead: false };
+  const takenAvs = (except) => [...room.players.values()].filter((x) => x !== except).map((x) => x.av);
   room.code = Array.from({ length: 4 }, () => DJ_ALPH[rand(DJ_ALPH.length)]).join("");
   const T = djTopic(room.code);
   const pub = (topic, msg, retain = false) => room.clients.forEach((c) => { if (c.connected) c.publish(topic, msg == null ? "" : JSON.stringify(msg), { qos: 0, retain }); });
@@ -6061,6 +6087,7 @@ function djRoom(h) {
       return h.change();
     }
     if (d.t === "hi" || d.t === "ping") {
+      if (!me.name) to(id, { t: "avs", taken: takenAvs() }); // a phone on the join screen: which avatars are free
       if (me.name && room.conns.get(me.name) !== id) { me.name = null; to(id, { t: "kicked" }); } // someone else took this name since
       else if (me.name && d.t === "ping") h.ping(me.name); // the relays may drop a message now and then: every ping gets the current state
       return;
@@ -6073,12 +6100,16 @@ function djRoom(h) {
       if (pl && pl.id && pl.id !== id && room.seen.has(pl.id) && pl.secret !== secret) return to(id, { t: "nametaken", name });
       if (!pl) {
         if (room.players.size >= 16) return to(id, { t: "full" });
-        pl = { name, secret, id: null }; room.players.set(name.toLowerCase(), pl);
+        pl = { name, secret, id: null, av: -1 }; room.players.set(name.toLowerCase(), pl);
       }
+      // Avatar: keep the wish if it's free, otherwise a random free one (doubles only once all are taken).
+      const used = new Set(takenAvs(pl)), want = djAvOk(d.av) ? d.av : -1;
+      const free = DJ_AVATARS.map((_, i) => i).filter((i) => !used.has(i));
+      pl.av = want >= 0 && !used.has(want) ? want : free.length ? (free.includes(pl.av) ? pl.av : free[rand(free.length)]) : want >= 0 ? want : rand(DJ_AVATARS.length);
       if (pl.id && pl.id !== id) { const o = room.seen.get(pl.id); if (o) o.name = null; to(pl.id, { t: "kicked", why: "elsewhere" }); }
       if (me.name && me.name !== pl.name) release(id);
       pl.secret = secret; pl.id = id; me.name = pl.name; room.conns.set(pl.name, id);
-      to(id, { t: "joined", name: pl.name }); h.join(pl.name);
+      to(id, { t: "joined", name: pl.name, av: pl.av }); h.join(pl.name);
       return;
     }
     if (me.name && room.conns.get(me.name) === id) h.msg(me.name, d);
@@ -6102,6 +6133,7 @@ function djRoom(h) {
   room.sweep = setInterval(() => { const now = Date.now(); for (const [id, x] of room.seen) if (now - x.t > 35000) drop(id); }, 5000);
   room.send = (name, msg) => { const id = room.conns.get(name); if (id) to(id, msg); };
   room.names = () => [...room.players.values()].map((x) => x.name);
+  room.avOf = (name) => { const pl = room.players.get(String(name).toLowerCase()); return pl ? pl.av : -1; };
   room.kick = (name) => {
     const pl = room.players.get(name.toLowerCase()); if (!pl) return;
     if (pl.id) { to(pl.id, { t: "kicked", why: "host" }); release(pl.id); }
@@ -6121,6 +6153,7 @@ function makeDJ() {
   let room = null;
   const online = (x) => !!(room && room.conns.has(x));
   const all = () => (room ? room.names() : []); // everyone who joined, in joining order
+  const avOf = (x) => (room ? room.avOf(x) : -1);
   const RD = () => DJ_ROUNDS[s.ri];
   const fromBag = (key, list) => { if (!s[key].length) s[key] = shuffleArr(list.slice()); return s[key].pop(); };
   // A player's two prompts: [{ j: prompt index, slot: 0 or 1 }].
@@ -6135,7 +6168,8 @@ function makeDJ() {
 
   // What one phone gets to know. Who picked which song stays secret until the reveal.
   function stFor(x) {
-    const st = { t: "state", seq: s.seq, phase: s.phase, ri: s.ri, round: s.ri >= 0 ? RD().name : "", sub: s.ri >= 0 ? RD().sub : "", gen: s.gen,
+    const avs = {}; all().forEach((y) => (avs[y] = avOf(y)));
+    const st = { t: "state", seq: s.seq, avs, phase: s.phase, ri: s.ri, round: s.ri >= 0 ? RD().name : "", sub: s.ri >= 0 ? RD().sub : "", gen: s.gen,
       left: s.endsAt ? Math.max(0, (s.endsAt - Date.now()) / 1000) : 0, inGame: s.parts.includes(x), err: s.err };
     if (s.phase === "answer" || s.phase === "filling") {
       st.mine = mine(x).map(({ j, slot }) => ({ text: s.prompts[j].text, pick: pub(s.prompts[j].songs[slot]) }));
@@ -6309,7 +6343,7 @@ function makeDJ() {
   // ---------- laptop screen ----------
   const roundChip = () => (s.ri >= 0 ? `<span class="chip">${RD().name}${RD().mult > 1 ? " · ×" + RD().mult : ""}</span>` : "");
   const mini = () => `<div class="section"><p class="label">Leaderboard</p><div class="tally">${ranked().map((x, i) =>
-    `<div><span>${i === 0 && s.score[x] ? "👑 " : ""}${esc(x)}${online(x) ? "" : " <span class='sub'>(offline)</span>"}</span><b>${s.score[x]}</b></div>`).join("")}</div></div>`;
+    `<div><span class="dj-who">${djAv(avOf(x), 26)}${i === 0 && s.score[x] ? "👑 " : ""}${esc(x)}${online(x) ? "" : " <span class='sub'>(offline)</span>"}</span><b>${s.score[x]}</b></div>`).join("")}</div></div>`;
   function songCard(k, mode) {
     const pr = curPr(), sl = disp()[k], t = pr.songs[sl], r = s.res;
     const art = t && djSafeImg(t.art);
@@ -6318,7 +6352,7 @@ function makeDJ() {
     if (mode === "reveal") {
       cls = r.win === k ? " win" : r.win >= 0 ? " lose" : "";
       const pct = r.v[0] + r.v[1] ? Math.round((r.v[k] / (r.v[0] + r.v[1])) * 100) : 0;
-      extra = `<div class="by">${esc(r.authors[k])}${r.safety[k] ? " <small>(safety song 🐌)</small>" : ""}</div>
+      extra = `<div class="by dj-who">${djAv(avOf(r.authors[k]), 46)}${esc(r.authors[k])}</div>${r.safety[k] ? `<small class="sub">safety song 🐌</small>` : ""}
         <div class="dj-meter"><i data-w="${pct}" style="background:${k ? "#33a0ff" : "#ff2e88"}"></i><b>${r.v[k]} vote${r.v[k] === 1 ? "" : "s"}</b></div>
         <div class="dj-pts">+${r.pts[k]}</div>`;
     }
@@ -6342,10 +6376,10 @@ function makeDJ() {
           ${code ? `<p class="sub">Scan the QR code, or go to</p><p class="dj-url">${esc(djBase().replace(/^https:\/\//, ""))}</p><p class="sub">tap <b>Join a room</b> and enter:</p><div class="code">${code}</div>`
             : err ? `<p class="error" style="text-align:left">${esc(err)}</p><button class="btn" data-a="reopen">Try again</button>` : `<p class="big-msg">Opening the room…</p>`}
         </div></div>
-        <div class="center"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${DJ_ANSWER} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`;
+        ${names.length ? `<div class="dj-crowd">${names.map((x, i) => `<button class="${online(x) ? "" : "off"}" data-a="kick" data-i="${i}" title="Tap to remove">${djAv(avOf(x))}<span>${esc(x)}</span></button>`).join("")}</div>`
+          : `<div class="center"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${DJ_ANSWER} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`}`;
       side = `<div class="section"><p class="label">Who's in · ${cnt} ${cnt === 1 ? "phone" : "phones"}</p>
-          ${names.length ? `<div class="dj-roster">${names.map((x, i) => `<button class="${online(x) ? "on" : ""}" data-a="kick" data-i="${i}" title="Remove">${online(x) ? "📱 " : "💤 "}${esc(x)}</button>`).join("")}</div>
-          <p class="note">Everyone joins on their own phone and types their name. Tap a name to remove it.</p>` : `<p class="sub">Nobody yet. Scan the QR code to join!</p>`}</div>
+          ${names.length ? `<p class="note">Everyone joins on their own phone with a name and an avatar. Tap someone to remove them. Faded = phone not connected.</p>` : `<p class="sub">Nobody yet. Scan the QR code to join!</p>`}</div>
         <p class="note">🔊 The songs play from this laptop as 30-second previews. No Spotify or accounts needed, just turn the volume up.</p>
         ${s.err && code ? `<p class="error">${esc(s.err)}</p>` : ""}
         <button class="btn primary pass-btn" data-a="start"${cnt >= 3 ? "" : " disabled"}>${cnt >= 3 ? "🎧 Start round 1" : `Waiting for phones (${cnt}/3)`}</button>`;
@@ -6357,7 +6391,7 @@ function makeDJ() {
       main = `<div class="dj-round small"><small>${esc(RD().name)} · ${esc(RD().sub)}</small><b>${s.phase === "filling" ? "Time's up! 🐌" : "Pick your songs!"}</b>
           <p>${s.phase === "filling" ? "Handing out safety songs to the slowpokes…" : "Two prompts each, on your phone. Funny and original wins."}</p></div>
         <div class="dj-clock"><b id="djClock">${s.phase === "filling" ? "0" : DJ_ANSWER}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>
-        <div class="dj-roster big">${s.parts.map((x) => { const n = mine(x).filter(({ j, slot }) => s.prompts[j].songs[slot]).length; return `<span class="${n === 2 ? "on" : ""}">${esc(x)} ${n === 2 ? "✅" : n + "/2"}</span>`; }).join("")}</div>`;
+        <div class="dj-roster big">${s.parts.map((x) => { const n = mine(x).filter(({ j, slot }) => s.prompts[j].songs[slot]).length; return `<span class="dj-who ${n === 2 ? "on" : ""}">${djAv(avOf(x), 30)}${esc(x)} ${n === 2 ? "✅" : n + "/2"}</span>`; }).join("")}</div>`;
       side = `<div class="dg-status">${roundChip()}<span class="chip">${done}/${s.parts.length} done</span></div>
         ${s.phase === "answer" ? `<button class="btn" data-a="endanswer">⏩ End the timer now</button>` : ""}${mini()}`;
     } else if (s.phase === "show" || s.phase === "vote" || s.phase === "reveal") {
@@ -6372,7 +6406,7 @@ function makeDJ() {
       } else if (s.phase === "vote") {
         const vs = voters(pr), n = vs.filter((x) => s.votes[x] != null).length;
         main += `<div class="dj-clock"><b id="djClock">${DJ_VOTE}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div>
-          <p class="big-msg">Vote on your phones! 🗳️</p><div class="dj-votes">${vs.filter((x) => s.votes[x] != null).map((x) => `<i>${esc(x)} ✓</i>`).join("")}</div></div>`;
+          <p class="big-msg">Vote on your phones! 🗳️</p><div class="dj-votes">${vs.filter((x) => s.votes[x] != null).map((x) => `<i class="dj-who">${djAv(avOf(x), 22)}${esc(x)} ✓</i>`).join("")}</div></div>`;
         side = `<div class="dg-status">${roundChip()}<span class="chip">${n}/${vs.length} voted</span></div>
           <p class="sub">The two DJs of this matchup can't vote.</p><button class="btn primary" data-a="reveal">Reveal now</button>${mini()}`;
       } else {
@@ -6386,7 +6420,7 @@ function makeDJ() {
     } else if (s.phase === "board" || s.phase === "final") {
       const b = s.board, fin = s.phase === "final";
       main = `<div class="dj-round small"><small>${fin ? "Game over" : esc(RD().name) + " done"}</small><b>${fin ? (b.first ? `👑 ${esc(b.first)} wins!` : "It's a tie at the top!") : "Leaderboard"}</b></div>
-        <div class="dj-board">${b.rows.map((r, i) => `<div class="dj-brow" style="animation-delay:${i * 0.08}s"><span class="rk">${1 + b.rows.filter((x) => x.score > r.score).length}</span><span class="nm">${r.score === b.rows[0].score && r.score ? "👑 " : ""}${esc(r.name)}</span>
+        <div class="dj-board">${b.rows.map((r, i) => `<div class="dj-brow" style="animation-delay:${i * 0.08}s"><span class="rk">${1 + b.rows.filter((x) => x.score > r.score).length}</span><span class="nm dj-who">${djAv(avOf(r.name), 46)}${r.score === b.rows[0].score && r.score ? "👑 " : ""}${esc(r.name)}</span>
           ${r.delta ? `<em>+${r.delta}</em>` : ""}<b data-from="${r.score - r.delta}" data-to="${r.score}">${r.score - r.delta}</b></div>`).join("")}</div>`;
       side = `<div class="fate"><small>${fin ? "Final round" : "End of " + esc(RD().name)}</small>
           <p>${b.last.length ? `Last place: ${b.last.map(esc).join(" & ")} drink${b.last.length > 1 ? "" : "s"} 2.` : "All tied up. Nobody drinks."}</p>
@@ -6447,14 +6481,14 @@ function makeDJ() {
 
 /* ---------- DJ Duel: the phone side ---------- */
 const DJP_KEY = "kletspotje:dj-me";
-const DJP = { client: null, id: "", T: "", run: 0, ping: null, code: "", name: "", joined: false, draft: "", secret: "", st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
+const DJP = { client: null, id: "", T: "", run: 0, ping: null, code: "", name: "", joined: false, draft: "", secret: "", av: -1, taken: [], st: null, found: null, q: "", searching: false, edit: null, status: "", err: "", endsAt: 0, timer: null };
 function djpJoin(code) {
   code = String(code).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
   const me = loadJ(DJP_KEY) || {};
   // The secret identifies this phone, so it can take its own name back after a reload.
   const secret = me.secret || djUid() + djUid();
   saveJ(DJP_KEY, { ...me, secret });
-  Object.assign(DJP, { code, secret, name: me.code === code ? me.name || "" : "", joined: false, draft: me.name || "", key: "", st: null, found: null, q: "", err: "", searching: false, edit: null });
+  Object.assign(DJP, { code, secret, name: me.code === code ? me.name || "" : "", joined: false, draft: me.name || "", av: djAvOk(me.av) ? me.av : -1, taken: [], key: "", st: null, found: null, q: "", err: "", searching: false, edit: null });
   $("#djpCode").textContent = code;
   Music.stop();
   show("djp"); djpConnect();
@@ -6521,21 +6555,33 @@ function djpLeave() {
   Object.assign(DJP, { st: null, status: "" });
   show("home");
 }
-const djpHello = () => { if (DJP.name) djpSend({ t: "hello", name: DJP.name, secret: DJP.secret }); };
+const djpHello = () => { if (DJP.name) djpSend({ t: "hello", name: DJP.name, secret: DJP.secret, av: DJP.av }); };
 const djpSend = (m) => { const c = DJP.client; if (c && c.connected) c.publish(DJP.T + "/up/" + DJP.id, JSON.stringify(m), { qos: 0 }); };
 function djpData(d) {
   if (!d || typeof d !== "object") return;
   if (d.t === "joined") {
-    Object.assign(DJP, { name: String(d.name), joined: true, err: "" });
-    saveJ(DJP_KEY, { code: DJP.code, name: DJP.name, secret: DJP.secret });
+    Object.assign(DJP, { name: String(d.name), joined: true, err: "", av: djAvOk(d.av) ? d.av : DJP.av });
+    saveJ(DJP_KEY, { code: DJP.code, name: DJP.name, secret: DJP.secret, av: DJP.av });
     return djpRender();
+  }
+  if (d.t === "avs") { // which avatars other players already have
+    const taken = Array.isArray(d.taken) ? d.taken.filter(djAvOk) : [];
+    let changed = taken.join() !== DJP.taken.join();
+    DJP.taken = taken;
+    if (!djAvOk(DJP.av) || (taken.includes(DJP.av) && taken.length < DJ_AVATARS.length)) { // preselect a random free one
+      const free = DJ_AVATARS.map((_, i) => i).filter((i) => !taken.includes(i));
+      DJP.av = free.length ? free[rand(free.length)] : rand(DJ_AVATARS.length);
+      changed = true;
+    }
+    if (changed) djpRender();
+    return;
   }
   if (d.t === "kicked" || d.t === "nametaken" || d.t === "badname" || d.t === "full") {
     const was = DJP.name;
     Object.assign(DJP, { name: "", joined: false, st: null, key: "", draft: was || DJP.draft });
     DJP.err = d.t === "nametaken" ? `"${was}" is already taken. Pick another name.` : d.t === "full" ? "The game is full (16 players)."
       : d.t === "badname" ? "Type a name first." : d.why === "host" ? "The host removed you. You can join again with another name." : "You joined from another device.";
-    saveJ(DJP_KEY, { code: DJP.code, name: "", secret: DJP.secret });
+    saveJ(DJP_KEY, { code: DJP.code, name: "", secret: DJP.secret, av: DJP.av });
     return djpRender();
   }
   if (d.t === "state") {
@@ -6569,11 +6615,17 @@ function djpRender() {
   else if (DJP.status === "reconnecting") h = center("📡", "Reconnecting…", "Lost the signal for a moment. Hang on.");
   else if (DJP.status !== "on") h = center("🔌", DJP.status === "lost" ? "Lost the connection" : "Couldn't connect", es(DJP.status === "lost" ? "The laptop closed the room, or your phone went to sleep." : DJP.err))
     + `<button class="btn primary" data-p="retry">Reconnect</button><button class="btn ghost" data-p="leave">Use a different code</button>`;
-  else if (!DJP.name) h = center("🎧", "What's your name?", "This is how you'll show up on the big screen.")
-    + `<div class="player-row"><input type="text" id="djpName" maxlength="16" placeholder="Your name" value="${es(DJP.draft)}" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go"><button class="btn primary" data-p="join">Join</button></div>
-      ${DJP.err ? `<p class="error" style="text-align:left">${es(DJP.err)}</p>` : ""}`;
+  else if (!DJP.name) {
+    const allTaken = DJP.taken.length >= DJ_AVATARS.length;
+    h = `<div class="center">${djAv(DJP.av, 110, "pop")}<p class="big-msg">Who are you?</p></div>
+      <div class="player-row"><input type="text" id="djpName" maxlength="16" placeholder="Your name" value="${es(DJP.draft)}" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go"><button class="btn primary" data-p="join">Join</button></div>
+      ${DJP.err ? `<p class="error" style="text-align:left">${es(DJP.err)}</p>` : ""}
+      <p class="label">Pick your avatar</p>
+      <div class="dj-avs">${DJ_AVATARS.map((_, i) => { const tk = DJP.taken.includes(i) && !allTaken; return `<button class="${i === DJP.av ? "on" : ""}${tk ? " taken" : ""}" data-p="av" data-i="${i}"${tk ? " disabled" : ""} aria-label="Avatar ${i + 1}">${djAv(i)}</button>`; }).join("")}</div>`;
+  }
   else if (!DJP.joined || !st) h = center("🙌", "Joining…", "");
-  else if (st.phase === "lobby") h = center("🙌", `You're in, ${es(DJP.name)}!`, "Waiting for the host to start. Keep this screen open.") + `<button class="link" data-p="rename">✏️ Change my name</button>`;
+  else if (st.phase === "lobby") h = `<div class="center">${djAv(DJP.av, 150, "pop")}<p class="big-msg">You're in, ${es(DJP.name)}!</p><p class="sub">Look for yourself on the laptop. Waiting for the host to start.</p></div>`
+    + `<button class="link" data-p="rename">✏️ Change my name or avatar</button>`;
   else if (!st.inGame && st.phase !== "board" && st.phase !== "final") h = center("👀", "Round in progress", "You'll be in from the next round. Watch the laptop for now.");
   else if (st.phase === "intro") h = center("🎧", es(st.round), es(st.sub) + "<br>Two prompts are coming your way…");
   else if (st.phase === "answer") {
@@ -6605,14 +6657,14 @@ function djpRender() {
       const line = mi >= 0 ? (r.win === mi ? `You won! +${r.pts[mi]} points${r.lash ? " · SONGLASH 💥" : ""}` : r.drink && r.drink.name === me ? `You lost. +${r.pts[mi]} points, and drink ${sips(r.drink.n)} 🍺` : `+${r.pts[mi]} points`)
         : m.vote != null ? (r.win === m.vote ? "You backed the winner 🎉" : "Your pick lost.") : "";
       h = `${head}${center(r.win < 0 ? "🤝" : r.lash ? "💥" : "🏆", r.win < 0 ? "Tie!" : `${es(r.authors[r.win])} wins!`, es(line))}
-        ${[0, 1].map((k) => songs[k] ? `<div class="np"${r.win === k ? ' style="background:rgba(255,204,51,.18);border-color:#ffcc33"' : ""}>${djSafeImg(songs[k].art) ? `<img src="${es(djSafeImg(songs[k].art))}" alt="">` : `<span class="np-art">🎵</span>`}<div><b>${r.win === k ? "👑 " : ""}${es(songs[k].name)}</b><span>${es(r.authors[k])} · ${es(r.v[k])} vote${r.v[k] === 1 ? "" : "s"} · +${es(r.pts[k])}</span></div></div>` : "").join("")}`;
+        ${[0, 1].map((k) => songs[k] ? `<div class="np"${r.win === k ? ' style="background:rgba(255,204,51,.18);border-color:#ffcc33"' : ""}>${djSafeImg(songs[k].art) ? `<img src="${es(djSafeImg(songs[k].art))}" alt="">` : `<span class="np-art">🎵</span>`}<div><b>${r.win === k ? "👑 " : ""}${es(songs[k].name)}</b><span>${djAv((st.avs || {})[r.authors[k]], 18)} ${es(r.authors[k])} · ${es(r.v[k])} vote${r.v[k] === 1 ? "" : "s"} · +${es(r.pts[k])}</span></div></div>` : "").join("")}`;
     } else h = center("🎧", "Hang tight…", "");
   } else if ((st.phase === "board" || st.phase === "final") && st.board) {
     const rows = st.board.rows || [], r = rows.find((x) => x.name === DJP.name), rk = (x) => 1 + rows.filter((y) => y.score > x.score).length;
     const i = r ? rk(r) - 1 : -1, champ = st.board.first;
     h = center(st.phase === "final" ? (champ === DJP.name ? "👑" : "🏁") : "📊", st.phase === "final" ? (champ === DJP.name ? "You won DJ Duel!" : champ ? `${es(champ)} wins!` : "It's a tie at the top!") : "Leaderboard",
       r ? `You're <b>#${i + 1}</b> with ${es(r.score)} points${r.delta ? ` (+${es(r.delta)} this round)` : ""}.${(st.board.last || []).includes(DJP.name) ? " Last place: drink 2 🍺" : ""}` : "")
-      + `<div class="tally">${rows.map((x) => `<div><span>${rk(x)}. ${es(x.name)}</span><b>${es(x.score)}</b></div>`).join("")}</div>`;
+      + `<div class="tally">${rows.map((x) => `<div><span class="dj-who">${rk(x)}. ${djAv((st.avs || {})[x.name], 26)}${es(x.name)}</span><b>${es(x.score)}</b></div>`).join("")}</div>`;
   } else h = center("🎧", "Hang tight…", "");
   $("#djpBody").innerHTML = h;
   const q = $("#djpQ");
@@ -6639,8 +6691,9 @@ function djpAct(a, el) {
     if (document.activeElement) document.activeElement.blur();
     djpHello(); return djpRender();
   }
+  if (a === "av") { DJP.av = +el.dataset.i; tone(700 + DJP.av * 40, 0.05, "triangle", 0.06); return djpRender(); }
   if (a === "rename") {
-    djpSend({ t: "leave" });
+    djpSend({ t: "leave" }); djpSend({ t: "hi" }); // free my avatar, then get the current list of taken ones
     Object.assign(DJP, { draft: DJP.name, name: "", joined: false, st: null, key: "", err: "" });
     saveJ(DJP_KEY, { code: DJP.code, name: "", secret: DJP.secret });
     return djpRender();
