@@ -6099,8 +6099,8 @@ function djCfg() {
 const djFill = (q, x) => q.replace(/\{name\}/gi, x);
 const DJ_ROUNDS = [{ name: "Round 1", sub: "Normal points", mult: 1 }, { name: "Round 2", sub: "Double points!", mult: 2 }, { name: "The silly round", sub: "Silly prompts · double points", mult: 2, silly: true }];
 const DJ_SITE = "https://lucavanruiten.github.io/DRINKING/";
-// Avatars (images/avatars/*.png, cut-outs on transparent backgrounds). Each player gets their own while there are free ones.
-const DJ_AVATARS = ["actor", "bin", "bonnie", "famke", "gerard", "gordon", "humberto", "jeroen", "job retski", "judeska", "kim holland", "patricia", "pepita queen", "charli", "ilona", "party_till_I_die", "alex_consani", "ariana", "elijah", "kanye", "lil_nas", "rupaul", "aapje", "demi", "fly", "jessie", "john_pork", "patrick", "walter_white", "vape"];
+// Avatars (images/avatars/*.png, cut-outs on transparent backgrounds; a name with its own extension, like an animated .webp, is used as is). Each player gets their own while there are free ones.
+const DJ_AVATARS = ["actor", "bin", "bonnie", "famke", "gerard", "gordon", "humberto", "jeroen", "job retski", "judeska", "kim holland", "patricia", "pepita queen", "charli", "ilona", "party_till_I_die", "alex_consani", "ariana", "elijah", "kanye", "lil_nas", "rupaul", "aapje", "demi", "fly", "jessie", "john_pork", "patrick", "walter_white", "vape", "apple_store_girl.webp"];
 const djAvOk = (i) => Number.isInteger(i) && i >= 0 && i < DJ_AVATARS.length;
 // Players can also use their own photo: a small square JPEG, id "p:<hash>". The laptop collects them from the hello messages,
 // and phones ask the laptop for the ones they don't have yet (getpic → pic).
@@ -6186,7 +6186,7 @@ function djAv(i, size, cls = "") {
     return DJ_PICS[i] ? `<img class="dj-av photo ${cls}" src="${DJ_PICS[i]}" alt="" style="${st}">` : `<span class="dj-av ph ${cls}" style="${st}">📷</span>`;
   }
   const st = (size ? `--s:${size}px;` : "") + (djAvOk(i) ? `background-color:hsl(${(i * 53) % 360} 85% 62%)` : "");
-  return djAvOk(i) ? `<img class="dj-av ${cls}" src="images/avatars/${encodeURIComponent(DJ_AVATARS[i])}.png" alt="" style="${st}">` : `<span class="dj-av ph ${cls}" style="${st}">🎧</span>`;
+  return djAvOk(i) ? `<img class="dj-av ${cls}" src="images/avatars/${encodeURIComponent(DJ_AVATARS[i])}${/\.\w+$/.test(DJ_AVATARS[i]) ? "" : ".png"}" alt="" style="${st}">` : `<span class="dj-av ph ${cls}" style="${st}">🎧</span>`;
 }
 const DJ_LIBS = { mqtt: "https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js", qr: "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" };
 const libP = {};
