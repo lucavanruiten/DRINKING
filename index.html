@@ -706,6 +706,14 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .dj-votes { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 30px; }
 .dj-votes i { font-style: normal; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 99px; background: #fff; color: #111; border: 2px solid var(--ink); animation: slap .35s cubic-bezier(.2,1.4,.4,1); }
 .dj-res { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.dj-res.many { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 14px; }
+.dj-res.many .dj-rc { padding: 12px 10px; }
+.dj-res.many .dj-rc img, .dj-res.many .dj-rc .ph { width: min(100%, 22dvh, 200px); }
+.dj-res.many .dj-rc .t { font-size: 17px; }
+.dj-res.many .dj-rc .by { font-size: 17px; }
+@media (max-width: 760px) { .dj-res.many { grid-template-columns: 1fr 1fr; } }
+.dj-rc.mystery .ph { background: repeating-linear-gradient(45deg, #2a1a40 0 14px, #22143a 14px 28px); font-size: 54px; }
+.dj-rc.mystery .t { font-family: var(--fun); font-weight: 400; letter-spacing: .1em; }
 .dj-rc { display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; background: var(--surface-2); border: 3px solid var(--ink); border-radius: 22px; padding: 16px; box-shadow: 5px 5px 0 var(--ink); animation: slap .5s cubic-bezier(.2,1.4,.4,1) both; }
 .dj-rc + .dj-rc { animation-delay: .15s; }
 .dj-rc.win { background: linear-gradient(160deg, #ffcc33, #ff8a3d); color: #1a0f05; animation: slap .5s cubic-bezier(.2,1.4,.4,1) both, phhot .9s ease-in-out .6s infinite; }
@@ -729,6 +737,10 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .dj-ab.on { outline: 5px solid #fff; outline-offset: -11px; transform: translateY(3px); box-shadow: 0 4px 0 var(--ink); }
 .dj-ab.dim { opacity: .4; }
 .dj-abs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dj-abs.many .dj-ab big { font-size: 56px; } .dj-abs.many .dj-ab { padding: 12px 8px; }
+.dj-ab[data-on] { outline: 5px solid #fff; outline-offset: -11px; transform: translateY(3px); box-shadow: 0 4px 0 var(--ink); }
+.dj-abs:has([data-on]) .dj-ab:not([data-on]) { opacity: .4; }
+.dj-ab:disabled { opacity: .3; filter: grayscale(1); }
 .dj-mini { display: inline-flex; gap: 4px; }
 .dj-mini button { border: 2px solid var(--ink); border-radius: 8px; width: 30px; height: 28px; font-weight: 800; color: #fff; background: var(--surface-2); }
 .dj-mini button.on.a { background: #ff2e88; } .dj-mini button.on.b { background: #33a0ff; }
@@ -756,6 +768,12 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .86em; background
 .dj-crowd button:nth-child(odd) .dj-av { rotate: -4deg; } .dj-crowd button:nth-child(even) .dj-av { rotate: 3deg; }
 .dj-crowd .dj-av { --s: clamp(70px, 12dvh, 110px); border-width: 3px; box-shadow: 4px 5px 0 var(--ink); }
 .dj-crowd button.off { opacity: .4; filter: grayscale(.8); }
+.dj-crowd.many { gap: 10px 12px; } .dj-crowd.many .dj-av { --s: clamp(46px, 7dvh, 64px); border-width: 2.5px; box-shadow: 3px 3px 0 var(--ink); } .dj-crowd.many button { font-size: 13px; max-width: 80px; }
+.dj-crowd.lots { gap: 6px 8px; } .dj-crowd.lots .dj-av { --s: clamp(36px, 5.2dvh, 50px); border-width: 2px; box-shadow: 2px 2px 0 var(--ink); } .dj-crowd.lots button { font-size: 11.5px; max-width: 64px; gap: 3px; }
+.dj-roster.big.many span { font-size: 14px; padding: 6px 10px; }
+.dj-board.many { gap: 5px; } .dj-board.many .dj-brow { padding: 5px 14px; } .dj-board.many .dj-brow .rk { font-size: 22px; } .dj-board.many .dj-brow .nm { font-size: 17px; } .dj-board.many .dj-brow b { font-size: 24px; }
+.dj-gap { text-align: center; font-family: var(--marker); color: var(--muted); margin: 2px 0; }
+#djp .tally .me { background: color-mix(in srgb, #b8f135 22%, transparent); border-radius: 8px; outline: 2px solid #b8f135; }
 .dj-votes i.dj-who { gap: 4px; padding: 2px 8px 2px 2px; }
 .djp-dot { width: 12px; height: 12px; border-radius: 50%; background: #ff3d3d; border: 2px solid var(--ink); flex: none; }
 .djp-dot.on { background: #b8f135; }
@@ -2605,12 +2623,13 @@ $("#dgRules").addEventListener("click", () => openModal(
 const RULES = {
   dj: `<p>Quiplash, but with songs. Everyone joins on their phone with the room code (or the QR code) and types their name. Songs are searched on your phone and play from the laptop as 30-second previews. No Spotify or accounts needed.</p>
     <ul><li>Each round, everyone gets <b>2 prompts</b> on their phone, like "The song playing when you get arrested", and has <b>60 seconds</b> to pick a song for each (the host can change this in ⚙️ Settings). Too slow? You get a random <b>safety song</b> 🐌.</li>
-    <li>Every prompt goes to two players. The matchups play one by one on the laptop: both songs play for <b>15 seconds</b> (10–30 in ⚙️ Settings), with titles but without names.</li>
+    <li>Every prompt goes to two players. The matchups play one by one on the laptop: both songs play for <b>15 seconds</b> (10–30 in ⚙️ Settings), without names. A song's title only shows once it starts playing.</li>
     <li>In ⚙️ Settings the host can also add their own prompts and switch on <b>player names</b>: some prompts are then about someone in the room, like "Songs at Luca's birthday party".</li>
     <li>Everyone else votes on their phone. <b>Funny and original beats "good".</b></li>
     <li>Points: 100 per vote, +100 for winning the matchup, and a <b>SONGLASH</b> (every single vote) is +200 more.</li>
     <li>The loser of a matchup drinks the vote difference (max 3). A songlash = 3 sips.</li>
     <li>After each round there's a leaderboard: last place drinks 2 and first place hands out 2.</li>
+    <li><b>🥊 DJ Battles</b> (for big groups, switch it on in ⚙️ Settings): instead of 1-vs-1, groups of 3–4 DJs share one prompt, and everyone gets one prompt per round. The songs play one by one, and nobody sees a title before it plays. Last place in a battle drinks 2 (3 with zero votes). Everyone who backs the winner gets <b>🎯 Called it!</b> points (+50, doubled in rounds 2 and 3). Up to 40 players.</li>
     <li>Round 1 is normal points, round 2 is <b>double points</b>, and round 3 is the <b>silly round</b> (geese, Roombas, haunted fridges), also double points.</li></ul>`,
   schock: `<p>Germany's pub dice game. Three dice, and the player who opens the round may throw <b>up to 3 times</b>. That number is the limit for everyone in the round. Between throws you may only keep <b>1s</b> aside.</p>
     <ul><li><b>Schock aus</b> (1-1-1): the best hand. The loser of the round gets all 13 mats at once and loses the half.</li>
@@ -6083,7 +6102,7 @@ const DJ_NAMED = [
   "{name} trying to do a TikTok dance", "{name}'s audition for a boyband",
   "The song playing as {name} gets stopped at airport security", "{name} explaining the offside rule (wrongly)"
 ];
-const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15; // defaults; the host can change clip and answer time in ⚙️ Settings
+const DJ_ANSWER = 60, DJ_CLIP = 15, DJ_VOTE = 15, DJ_MAX = 40, DJ_CALLED = 50; // defaults; the host can change clip and answer time in ⚙️ Settings
 const DJ_CLIPS = [[10, "Speed run"], [15, "Default"], [20, "A bit longer"], [30, "Full preview"]], DJ_ANSWERS = [[60, "Default"], [90, "Relaxed"], [120, "Very drunk"]];
 // Host settings, saved on the laptop.
 const DJ_CFG_KEY = "kletspotje:dj-settings";
@@ -6093,6 +6112,7 @@ function djCfg() {
     clip: DJ_CLIPS.some(([v]) => v === c.clip) ? c.clip : DJ_CLIP,
     answer: DJ_ANSWERS.some(([v]) => v === c.answer) ? c.answer : DJ_ANSWER,
     names: !!c.names,
+    battle: !!c.battle, // DJ Battles: 3–4 DJs share one prompt (for big groups)
     custom: Array.isArray(c.custom) ? c.custom.filter((q) => typeof q === "string" && q.trim()).map((q) => q.trim().slice(0, 120)).slice(0, 200) : []
   };
 }
@@ -6246,6 +6266,7 @@ function djCleanTrack(t) {
   return { name: String(t.name || "?").slice(0, 120), artist: String(t.artist || "").slice(0, 120), preview, art: djSafeImg(String(t.art || "")), thumb: djSafeImg(String(t.thumb || "")) };
 }
 const djAudio = new Audio();
+const DJ_ABC = ["#ff2e88", "#33a0ff", "#8a3dff", "#ff7a1a", "#14b88a", "#d4a017"]; // song A, B, C… (battles have up to 5)
 const es = (v) => esc(String(v == null ? "" : v)); // for data that came over the wire
 function djTrackBtn(t, attr, on) {
   const img = djSafeImg(t.thumb || t.art);
@@ -6279,6 +6300,7 @@ function djRoom(h) {
     if (!d || typeof d !== "object" || !/^[0-9a-f]{12}$/.test(id)) return;
     const me = room.seen.get(id) || { name: null, t: 0 };
     me.t = Date.now(); room.seen.set(id, me);
+    if (me.name) { const p0 = room.players.get(me.name.toLowerCase()); if (p0 && p0.id === id) p0.seenAt = me.t; }
     if (d.t === "bye") return drop(id);
     if (d.t === "getpic") { if (djIsPic(d.id) && DJ_PICS[d.id]) to(id, { t: "pic", id: d.id, d: DJ_PICS[d.id] }); return; }
     if (d.t === "leave") { // "not me, change my name"
@@ -6299,7 +6321,7 @@ function djRoom(h) {
       // Someone else is playing under this name right now.
       if (pl && pl.id && pl.id !== id && room.seen.has(pl.id) && pl.secret !== secret) return to(id, { t: "nametaken", name });
       if (!pl) {
-        if (room.players.size >= 16) return to(id, { t: "full" });
+        if (room.players.size >= DJ_MAX) return to(id, { t: "full" });
         pl = { name, secret, id: null, av: -1 }; room.players.set(name.toLowerCase(), pl);
       }
       // Avatar: their own photo, or keep the wish if it's free, otherwise a random free one (doubles only once all are taken).
@@ -6309,7 +6331,7 @@ function djRoom(h) {
       else pl.av = want >= 0 && !used.has(want) ? want : free.length ? (free.includes(pl.av) ? pl.av : free[rand(free.length)]) : want >= 0 ? want : rand(DJ_AVATARS.length);
       if (pl.id && pl.id !== id) { const o = room.seen.get(pl.id); if (o) o.name = null; to(pl.id, { t: "kicked", why: "elsewhere" }); }
       if (me.name && me.name !== pl.name) release(id);
-      pl.secret = secret; pl.id = id; me.name = pl.name; room.conns.set(pl.name, id);
+      pl.secret = secret; pl.id = id; pl.seenAt = Date.now(); me.name = pl.name; room.conns.set(pl.name, id);
       to(id, { t: "joined", name: pl.name, av: pl.av }); h.join(pl.name);
       return;
     }
@@ -6334,6 +6356,7 @@ function djRoom(h) {
   room.sweep = setInterval(() => { const now = Date.now(); for (const [id, x] of room.seen) if (now - x.t > 35000) drop(id); }, 5000);
   room.send = (name, msg) => { const id = room.conns.get(name); if (id) to(id, msg); };
   room.names = () => [...room.players.values()].map((x) => x.name);
+  room.seenAgo = (name) => { const pl = room.players.get(String(name).toLowerCase()); return pl && pl.seenAt ? Date.now() - pl.seenAt : Infinity; };
   room.avOf = (name) => { const pl = room.players.get(String(name).toLowerCase()); return pl ? pl.av : -1; };
   room.kick = (name) => {
     const pl = room.players.get(name.toLowerCase()); if (!pl) return;
@@ -6349,11 +6372,14 @@ function djRoom(h) {
 }
 
 function makeDJ() {
-  const s = { phase: "lobby", ri: -1, parts: [], prompts: [], order: [], mi: 0, flip: 0, cur: 0, endsAt: 0, loading: false, votes: {}, res: null,
+  const s = { phase: "lobby", ri: -1, parts: [], prompts: [], order: [], mi: 0, perm: [0, 1], battle: false, cur: 0, endsAt: 0, loading: false, votes: {}, res: null,
     score: {}, delta: {}, bagN: [], bagS: [], bagP: [], usedQ: new Set(), found: {}, err: "", qr: "", qrFor: "", board: null, gen: 0, seq: 0,
     cfg: djCfg(), tab: "join", named: {}, customLeft: null };
   let room = null;
   const online = (x) => !!(room && room.conns.has(x));
+  // Phones fall asleep while everyone watches the leaderboard. Anyone heard from in the last 10 minutes is still in the next round:
+  // their phone rejoins when it wakes up, and if they never come back they get safety songs.
+  const around = (x) => online(x) || (room && room.seenAgo(x) < 600000);
   const all = () => (room ? room.names() : []); // everyone who joined, in joining order
   const avOf = (x) => (room ? room.avOf(x) : -1);
   const RD = () => DJ_ROUNDS[s.ri];
@@ -6371,34 +6397,48 @@ function makeDJ() {
   const mine = (x) => s.prompts.map((pr, j) => ({ j, slot: pr.authors.indexOf(x) })).filter((m) => m.slot >= 0);
   const doneAll = (x) => mine(x).every(({ j, slot }) => s.prompts[j].songs[slot]);
   const curPr = () => s.prompts[s.order[s.mi]];
-  const disp = () => (s.flip ? [1, 0] : [0, 1]); // screen position → song slot
-  const voters = (pr) => s.parts.filter((x) => !pr.authors.includes(x));
+  const disp = () => s.perm; // screen position → song slot (shuffled per matchup)
+  const voters = (pr) => all().filter((x) => !pr.authors.includes(x)); // everyone in the room votes, also people who joined mid-round
   const pub = (t) => t && { name: t.name, artist: t.artist, art: t.art, thumb: t.thumb };
-  const L = (k) => (k ? "B" : "A");
+  const L = (k) => "ABCDEF"[k];
+  const word = () => (s.battle ? "battle" : "matchup");
   const ranked = () => Object.keys(s.score).sort((a, b) => s.score[b] - s.score[a]);
 
   // What one phone gets to know. Who picked which song stays secret until the reveal.
   function stFor(x) {
     const avs = {}; all().forEach((y) => (avs[y] = avOf(y)));
-    const st = { t: "state", seq: s.seq, avs, phase: s.phase, ri: s.ri, round: s.ri >= 0 ? RD().name : "", sub: s.ri >= 0 ? RD().sub : "", gen: s.gen,
+    const st = { t: "state", seq: s.seq, avs, phase: s.phase, ri: s.ri, round: s.ri >= 0 ? RD().name : "", sub: s.ri >= 0 ? RD().sub : "", gen: s.gen, battle: s.battle,
       left: s.endsAt ? Math.max(0, (s.endsAt - Date.now()) / 1000) : 0, inGame: s.parts.includes(x), err: s.err };
     if (s.phase === "answer" || s.phase === "filling") {
-      st.mine = mine(x).map(({ j, slot }) => ({ text: s.prompts[j].text, pick: pub(s.prompts[j].songs[slot]) }));
+      st.mine = mine(x).map(({ j, slot }) => ({ text: s.prompts[j].text, pick: pub(s.prompts[j].songs[slot]), djs: s.prompts[j].authors.length }));
       st.done = s.parts.filter(doneAll).length; st.total = s.parts.length;
     }
     if (s.phase === "show" || s.phase === "vote" || s.phase === "reveal") {
       const pr = curPr(), d = disp(), a = pr.authors.indexOf(x);
-      st.m = { n: s.mi + 1, of: s.order.length, prompt: pr.text, songs: d.map((sl) => pub(pr.songs[sl])), cur: s.cur, loading: s.loading,
+      // While the songs play, only the ones that have started are sent: the rest stay a surprise.
+      st.m = { n: s.mi + 1, of: s.order.length, prompt: pr.text, songs: d.map((sl, k) => (s.phase !== "show" || k <= s.cur ? pub(pr.songs[sl]) : null)),
+        missing: d.map((sl) => !pr.songs[sl]), cur: s.cur, loading: s.loading,
         author: a >= 0 ? d.indexOf(a) : -1, vote: s.votes[x] != null ? s.votes[x] : null, res: s.phase === "reveal" ? s.res : null };
     }
     if (s.phase === "board" || s.phase === "final") st.board = s.board;
     return st;
   }
   // Changes that happen together go out as one update per phone (the public relays don't like bursts).
+  // Big rooms wait a little longer, and a phone whose state didn't change gets nothing (its 5-second ping catches up anyway).
   let syncT = 0;
+  const sentKey = {};
   function sync() {
     if (syncT) return;
-    syncT = setTimeout(() => { syncT = 0; s.seq++; if (room && G === g) for (const x of room.conns.keys()) room.send(x, stFor(x)); }, 80);
+    const n = room ? room.conns.size : 0;
+    syncT = setTimeout(() => {
+      syncT = 0; s.seq++;
+      if (!room || G !== g) return;
+      for (const x of room.conns.keys()) {
+        const st = stFor(x), key = JSON.stringify({ ...st, seq: 0, left: 0 });
+        if (sentKey[x] === key) continue;
+        sentKey[x] = key; room.send(x, st);
+      }
+    }, 80 + 5 * n);
   }
   function openRoom() {
     s.err = "";
@@ -6406,9 +6446,9 @@ function makeDJ() {
       if (G !== g) return;
       room = djRoom({
         removable: (x) => s.phase === "lobby" && !s.score[x],
-        join: (x) => { tone(880, 0.06, "triangle", 0.08); tone(1320, 0.08, "triangle", 0.06, 0.06); room.send(x, stFor(x)); paint(); },
+        join: (x) => { tone(880, 0.06, "triangle", 0.08); tone(1320, 0.08, "triangle", 0.06, 0.06); if (addLate(x)) sync(); delete sentKey[x]; room.send(x, stFor(x)); paint(); },
         change: () => paint(),
-        ping: (x) => room.send(x, stFor(x)),
+        ping: (x) => { const st = stFor(x); sentKey[x] = JSON.stringify({ ...st, seq: 0, left: 0 }); room.send(x, st); },
         msg: onMsg
       });
     }).catch((e) => { s.err = e.message; paint(); });
@@ -6423,30 +6463,61 @@ function makeDJ() {
       tone(660, 0.08, "triangle", 0.1); tone(990, 0.12, "triangle", 0.08, 0.08);
       paint(); sync();
       if (s.parts.every(doneAll)) setTimeout(() => { if (G === g) finishAnswer(); }, 1200);
-    } else if (d.t === "vote" && s.phase === "vote" && voters(curPr()).includes(x) && (d.v === 0 || d.v === 1)) castVote(x, d.v);
+    } else if (d.t === "vote" && s.phase === "vote" && voters(curPr()).includes(x) && Number.isInteger(d.v) && d.v >= 0 && d.v < s.perm.length && curPr().songs[s.perm[d.v]]) castVote(x, d.v);
   }
 
   // ---------- flow ----------
+  // A prompt's text: a name prompt, else the host's own prompts first, else the round's deck. {name} is never one of its two authors,
+  // and whoever has been named least so far is next.
+  function fillPrompt(pr, named) {
+    const c = shuffleArr(s.parts.filter((x) => !pr.authors.includes(x))).sort((a, b) => (s.named[a] || 0) - (s.named[b] || 0))[0];
+    const q = named && c ? fromBag("bagP", DJ_NAMED) : s.customLeft.length ? s.customLeft.pop() : fromBag(RD().silly ? "bagS" : "bagN", RD().silly ? DJ_SILLY : DJ_PROMPTS);
+    if (!/\{name\}/i.test(q)) return (pr.text = q);
+    if (c) s.named[c] = (s.named[c] || 0) + 1;
+    pr.text = djFill(q, c || "someone");
+  }
+  // Someone joins while the songs are being picked: squeeze them into the circle between two neighbours A → B whose shared prompt
+  // has no song from B yet. The newcomer takes B's place on that prompt, and B gets a fresh prompt against the newcomer instead.
+  // The new prompt goes right after the old one, so B's prompts keep their order on the phone.
+  function addLate(x) {
+    if ((s.phase !== "intro" && s.phase !== "answer") || s.parts.includes(x)) return false;
+    if (s.phase === "answer" && s.endsAt - Date.now() < 25000) return false; // too late to pick: vote this round, play the next
+    if (s.battle) { // battles: join the smallest group
+      const pr = s.prompts.slice().sort((a, b) => a.authors.length - b.authors.length)[0];
+      pr.authors.push(x); pr.songs.push(null); pr.safety.push(false);
+      s.parts.push(x); if (s.score[x] == null) s.score[x] = 0;
+      return true;
+    }
+    const free = s.prompts.map((_, j) => j).filter((j) => !s.prompts[j].songs[1]);
+    if (!free.length) return false;
+    const j = free[rand(free.length)], pr = s.prompts[j], b = pr.authors[1];
+    pr.authors[1] = x;
+    const np = { text: "", authors: [x, b], songs: [null, null], safety: [false, false] };
+    s.parts.push(x); if (s.score[x] == null) s.score[x] = 0;
+    fillPrompt(np, s.cfg.names && rand(3) === 0);
+    s.prompts.splice(j + 1, 0, np);
+    return true;
+  }
   function startRound() {
-    const parts = all().filter(online);
-    if (parts.length < 3) { s.err = "You need at least 3 phones connected."; return paint(); }
+    if (all().filter(online).length < 3) { s.err = "You need at least 3 phones connected."; return paint(); }
+    const parts = all().filter(around);
     s.ri++; s.err = ""; s.gen++;
     const o = shuffleArr(parts.slice()), N = o.length;
-    s.parts = o.slice();
-    // Every prompt goes to two neighbours in a shuffled circle, so everyone gets exactly two prompts and two different rivals.
-    s.prompts = o.map((_, j) => ({ text: "", authors: [o[j], o[(j + 1) % N]], songs: [null, null], safety: [false, false] }));
+    s.parts = o.slice(); s.battle = s.cfg.battle;
+    if (s.battle) {
+      // DJ Battles: groups of 3–4 (as even as possible) share one prompt, so everyone plays one song per round.
+      const k = Math.ceil(N / 4), groups = Array.from({ length: k }, () => []);
+      o.forEach((x, i) => groups[i % k].push(x));
+      s.prompts = groups.map((gr) => ({ text: "", authors: gr, songs: gr.map(() => null), safety: gr.map(() => false) }));
+    } else {
+      // Every prompt goes to two neighbours in a shuffled circle, so everyone gets exactly two prompts and two different rivals.
+      s.prompts = o.map((_, j) => ({ text: "", authors: [o[j], o[(j + 1) % N]], songs: [null, null], safety: [false, false] }));
+    }
     // About a third of the prompts name someone (Settings), and custom prompts go first. A named player is never answering that prompt,
     // and whoever has been named least so far is next.
     if (!s.customLeft) s.customLeft = shuffleArr(s.cfg.custom.slice());
-    const named = new Set(s.cfg.names ? shuffleArr(o.map((_, j) => j)).slice(0, Math.max(1, Math.round(N / 3))) : []);
-    const about = (pr) => {
-      const c = shuffleArr(o.filter((x) => !pr.authors.includes(x))).sort((a, b) => (s.named[a] || 0) - (s.named[b] || 0))[0];
-      s.named[c] = (s.named[c] || 0) + 1; return c;
-    };
-    s.prompts.forEach((pr, j) => {
-      const q = named.has(j) ? fromBag("bagP", DJ_NAMED) : s.customLeft.length ? s.customLeft.pop() : fromBag(RD().silly ? "bagS" : "bagN", RD().silly ? DJ_SILLY : DJ_PROMPTS);
-      pr.text = /\{name\}/i.test(q) ? djFill(q, about(pr)) : q;
-    });
+    const P = s.prompts.length, named = new Set(s.cfg.names ? shuffleArr(s.prompts.map((_, j) => j)).slice(0, Math.max(1, Math.round(P / 3))) : []);
+    s.prompts.forEach((pr, j) => fillPrompt(pr, named.has(j)));
     s.parts.forEach((x) => { if (s.score[x] == null) s.score[x] = 0; });
     s.delta = {}; s.found = {}; s.board = null; s.endsAt = 0; s.phase = "intro";
     [262, 330, 392, 523].forEach((f, j) => tone(f, 0.2, "sawtooth", 0.05, j * 0.12));
@@ -6463,7 +6534,7 @@ function makeDJ() {
     if (s.phase !== "answer") return;
     s.phase = "filling"; s.endsAt = 0; paint(); sync();
     // Too slow? You get a safety song.
-    for (const pr of s.prompts) for (const slot of [0, 1]) {
+    for (const pr of s.prompts) for (let slot = 0; slot < pr.songs.length; slot++) {
       if (pr.songs[slot]) continue;
       const items = await djSearch(DJ_SAFETY[rand(DJ_SAFETY.length)]).catch(() => null);
       if (G !== g) return;
@@ -6472,28 +6543,33 @@ function makeDJ() {
     s.order = shuffleArr(s.prompts.map((_, j) => j)); s.mi = 0;
     startMatchup();
   }
+  const songAt = (k) => curPr().songs[disp()[k]];
   function startMatchup() {
     const pr = curPr();
-    s.flip = rand(2); s.votes = {}; s.res = null; s.cur = 0; s.endsAt = 0;
-    if (!pr.songs[0] || !pr.songs[1]) { s.phase = "show"; return reveal(); } // a missing song forfeits
-    s.phase = "show"; playCur();
+    s.perm = shuffleArr(pr.authors.map((_, k) => k)); s.votes = {}; s.res = null; s.cur = 0; s.endsAt = 0;
+    s.phase = "show";
+    if (pr.songs.filter(Boolean).length < 2) return reveal(); // a missing song forfeits
+    while (!songAt(s.cur)) s.cur++;
+    playCur();
   }
   function playCur() {
-    const t = curPr().songs[disp()[s.cur]];
+    const t = songAt(s.cur);
     s.loading = true; s.endsAt = 0; s.err = ""; paint(); sync();
     const a = djAudio, cur = s.cur, mi = s.mi;
     a.pause(); a.src = t.preview; a.volume = 1;
     a.play().then(() => {
       if (G !== g || s.phase !== "show" || s.cur !== cur || s.mi !== mi) return;
       s.loading = false; s.endsAt = Date.now() + s.cfg.clip * 1000; paint(); sync();
-      if (cur === 0) { const nx = curPr().songs[disp()[1]]; if (nx) new Audio(nx.preview).preload = "auto"; } // warm up song B
+      const nx = songAt(cur + 1); if (nx) new Audio(nx.preview).preload = "auto"; // warm up the next song
     }).catch(() => {
       if (G !== g || s.phase !== "show") return;
       s.loading = false; s.err = "This preview wouldn't play. Try again, or skip it."; paint();
     });
   }
+  const nextIdx = () => { let k = s.cur + 1; while (k < s.perm.length && !songAt(k)) k++; return k < s.perm.length ? k : -1; };
   function nextSong() {
-    if (s.cur === 0) { s.cur = 1; playCur(); }
+    const k = nextIdx();
+    if (k >= 0) { s.cur = k; playCur(); }
     else { djAudio.pause(); startVote(); }
   }
   function startVote() {
@@ -6511,25 +6587,34 @@ function makeDJ() {
   }
   function reveal() {
     if (s.phase !== "vote" && s.phase !== "show") return;
-    const pr = curPr(), d = disp(), mult = RD().mult, v = [0, 0];
-    voters(pr).forEach((x) => { if (s.votes[x] != null) v[s.votes[x]]++; });
-    const authors = d.map((sl) => pr.authors[sl]), pts = [0, 0];
-    const missing = d.map((sl) => !pr.songs[sl]);
-    let win = -1, lash = false, drinkRes = null;
-    if (missing[0] || missing[1]) { win = missing[0] && missing[1] ? -1 : missing[0] ? 1 : 0; if (win >= 0) pts[win] = 100 * mult; }
+    const pr = curPr(), d = disp(), mult = RD().mult, v = d.map(() => 0);
+    const authors = d.map((sl) => pr.authors[sl]), pts = d.map(() => 0), missing = d.map((sl) => !pr.songs[sl]);
+    voters(pr).forEach((x) => { const k = s.votes[x]; if (k != null && !missing[k]) v[k]++; });
+    const live = d.map((_, k) => k).filter((k) => !missing[k]);
+    let win = -1, lash = false, callPts = 0;
+    const drinks = [];
+    if (live.length < 2) { if (live.length) { win = live[0]; pts[win] = 100 * mult; } } // forfeit
     else {
-      pts[0] = v[0] * 100 * mult; pts[1] = v[1] * 100 * mult;
-      if (v[0] !== v[1]) {
-        win = v[0] > v[1] ? 0 : 1; const lose = 1 - win;
-        pts[win] += 100 * mult;
-        lash = v[lose] === 0 && v[win] >= 2;
+      live.forEach((k) => (pts[k] = v[k] * 100 * mult));
+      const top = Math.max(...live.map((k) => v[k])), low = Math.min(...live.map((k) => v[k])), tops = live.filter((k) => v[k] === top);
+      if (tops.length === 1) {
+        win = tops[0]; pts[win] += 100 * mult;
+        lash = v[win] >= 2 && live.every((k) => k === win || v[k] === 0); // every single vote
         if (lash) pts[win] += 200 * mult;
-        const n = lash ? 3 : Math.min(3, v[win] - v[lose]);
-        drink(authors[lose], n); drinkRes = { name: authors[lose], n };
+      }
+      if (top !== low) {
+        if (!s.battle) { const lose = live.find((k) => k !== win); drinks.push({ name: authors[lose], n: lash ? 3 : Math.min(3, v[win] - v[lose]) }); }
+        else live.filter((k) => v[k] === low).forEach((k) => drinks.push({ name: authors[k], n: v[k] ? 2 : 3 })); // last place drinks 2, no votes at all = 3
+      }
+      // Battles: the crowd that backed the winner "called it".
+      if (s.battle && win >= 0) {
+        callPts = DJ_CALLED * mult;
+        voters(pr).filter((x) => s.votes[x] === win).forEach((x) => { s.score[x] = (s.score[x] || 0) + callPts; s.delta[x] = (s.delta[x] || 0) + callPts; });
       }
     }
+    drinks.forEach((x) => drink(x.name, x.n));
     authors.forEach((x, k) => { s.score[x] = (s.score[x] || 0) + pts[k]; s.delta[x] = (s.delta[x] || 0) + pts[k]; });
-    s.res = { v, authors, pts, win, lash, drink: drinkRes, safety: d.map((sl) => pr.safety[sl]), missing };
+    s.res = { v, authors, pts, win, lash, drinks, callPts, safety: d.map((sl) => pr.safety[sl]), missing };
     s.phase = "reveal"; s.endsAt = 0; djAudio.pause();
     for (let k = 0; k < 12; k++) noiseHit(0.05, 0.12, 300, "lowpass", k * 0.05);
     paint(); sync();
@@ -6565,18 +6650,22 @@ function makeDJ() {
 
   // ---------- laptop screen ----------
   const roundChip = () => (s.ri >= 0 ? `<span class="chip">${RD().name}${RD().mult > 1 ? " · ×" + RD().mult : ""}</span>` : "");
-  const mini = () => `<div class="section"><p class="label">Leaderboard</p><div class="tally">${ranked().map((x, i) =>
-    `<div><span class="dj-who">${djAv(avOf(x), 26)}${i === 0 && s.score[x] ? "👑 " : ""}${esc(x)}${online(x) ? "" : " <span class='sub'>(offline)</span>"}</span><b>${s.score[x]}</b></div>`).join("")}</div></div>`;
+  const mini = () => { const r = ranked(); return `<div class="section"><p class="label">Leaderboard</p><div class="tally">${r.slice(0, 8).map((x, i) =>
+    `<div><span class="dj-who">${djAv(avOf(x), 26)}${i === 0 && s.score[x] ? "👑 " : ""}${esc(x)}${online(x) ? "" : " <span class='sub'>(offline)</span>"}</span><b>${s.score[x]}</b></div>`).join("")}</div>
+    ${r.length > 8 ? `<p class="note">+ ${r.length - 8} more</p>` : ""}</div>`; };
   function songCard(k, mode) {
     const pr = curPr(), sl = disp()[k], t = pr.songs[sl], r = s.res;
     const art = t && djSafeImg(t.art);
     let cls = "", extra = "";
-    if (mode === "show") cls = k === s.cur && !s.loading && !s.err ? " on" : k > s.cur ? " off" : "";
+    // Songs that haven't played yet are a surprise.
+    if (mode === "show" && k > s.cur) return `<div class="dj-rc off mystery"><span class="chip">Song ${L(k)}</span><span class="ph">${t ? "🎁" : "🚫"}</span>
+      <div><div class="t">${t ? "???" : "No song"}</div><div class="ar">${t ? "Up next" : "Forfeit"}</div></div></div>`;
+    if (mode === "show") cls = k === s.cur && !s.loading && !s.err ? " on" : "";
     if (mode === "reveal") {
       cls = r.win === k ? " win" : r.win >= 0 ? " lose" : "";
-      const pct = r.v[0] + r.v[1] ? Math.round((r.v[k] / (r.v[0] + r.v[1])) * 100) : 0;
+      const tot = r.v.reduce((a, b) => a + b, 0), pct = tot ? Math.round((r.v[k] / tot) * 100) : 0;
       extra = `<div class="by dj-who">${djAv(avOf(r.authors[k]), 46)}${esc(r.authors[k])}</div>${r.safety[k] ? `<small class="sub">safety song 🐌</small>` : ""}
-        <div class="dj-meter"><i data-w="${pct}" style="background:${k ? "#33a0ff" : "#ff2e88"}"></i><b>${r.v[k]} vote${r.v[k] === 1 ? "" : "s"}</b></div>
+        <div class="dj-meter"><i data-w="${pct}" style="background:${DJ_ABC[k]}"></i><b>${r.v[k]} vote${r.v[k] === 1 ? "" : "s"}</b></div>
         <div class="dj-pts">+${r.pts[k]}</div>`;
     }
     return `<div class="dj-rc${cls}"><span class="chip">${mode === "reveal" && r.win === k ? (r.lash ? "💥 SONGLASH!" : "👑 WINNER") : "Song " + L(k)}</span>
@@ -6584,6 +6673,8 @@ function makeDJ() {
       <div><div class="t">${t ? esc(t.name) : "No song"}</div><div class="ar">${t ? esc(t.artist) : "Forfeit"}</div></div>
       ${mode === "show" ? `<div class="dj-eq">${Array.from({ length: 12 }, (_, j) => `<i style="animation-delay:-${((j * 0.137) % 0.45).toFixed(2)}s"></i>`).join("")}</div>` : ""}${extra}</div>`;
   }
+  // Big games: the laptop shows the top 10 and the bottom 2 (phones show everyone).
+  const boardRows = (rows) => (rows.length > 13 ? [...rows.slice(0, 10), "gap", ...rows.slice(-2)] : rows);
   function paint() {
     if (G !== g || !$("#dg").classList.contains("active")) return;
     let main = "", side = "";
@@ -6599,53 +6690,55 @@ function makeDJ() {
           ${code ? `<p class="sub">Scan the QR code, or go to</p><p class="dj-url">${esc(djBase().replace(/^https:\/\//, ""))}</p><p class="sub">tap <b>Join a room</b> and enter:</p><div class="code">${code}</div>`
             : err ? `<p class="error" style="text-align:left">${esc(err)}</p><button class="btn" data-a="reopen">Try again</button>` : `<p class="big-msg">Opening the room…</p>`}
         </div></div>
-        ${names.length ? `<div class="dj-crowd">${names.map((x, i) => `<button class="${online(x) ? "" : "off"}" data-a="kick" data-i="${i}" title="Tap to remove">${djAv(avOf(x))}<span>${esc(x)}</span></button>`).join("")}</div>`
-          : `<div class="center dj-intro"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${s.cfg.answer} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.</p></div>`}`;
+        ${names.length ? `<div class="dj-crowd${names.length > 16 ? " many" : ""}${names.length > 24 ? " lots" : ""}">${names.map((x, i) => `<button class="${online(x) ? "" : "off"}" data-a="kick" data-i="${i}" title="Tap to remove">${djAv(avOf(x))}<span>${esc(x)}</span></button>`).join("")}</div>`
+          : `<div class="center dj-intro"><p class="big-msg">🎧 DJ Duel</p><p class="sub">Everyone gets two prompts on their phone and has ${s.cfg.answer} seconds to pick a song for each. Then the matchups play one by one and the room votes. <b>Funny and original beats "good".</b> Three rounds, and the scores double after round one.${s.cfg.battle ? " <b>🥊 DJ Battles is on:</b> 3–4 DJs share each prompt." : ""}</p></div>`}`;
       if (s.tab === "set") main = settingsView();
       main = `<div class="dj-tabs"><button class="${s.tab === "set" ? "" : "on"}" data-a="tab" data-v="join">📱 Join</button><button class="${s.tab === "set" ? "on" : ""}" data-a="tab" data-v="set">⚙️ Settings</button></div>` + main;
       side = `<div class="section"><p class="label">Who's in · ${cnt} ${cnt === 1 ? "phone" : "phones"}</p>
           ${names.length ? `<p class="note">Everyone joins on their own phone with a name and an avatar. Tap someone to remove them. Faded = phone not connected.</p>` : `<p class="sub">Nobody yet. Scan the QR code to join!</p>`}</div>
-        <p class="note">🔊 The songs play from this laptop: ${s.cfg.clip} seconds each, and everyone gets ${s.cfg.answer} seconds to pick${s.cfg.names ? ". Player names in prompts are on 😈" : ""}. No Spotify or accounts needed, just turn the volume up.</p>
+        <p class="note">🔊 The songs play from this laptop: ${s.cfg.clip} seconds each, and everyone gets ${s.cfg.answer} seconds to pick${s.cfg.names ? ". Player names in prompts are on 😈" : ""}${s.cfg.battle ? ". 🥊 DJ Battles mode" : ""}. Up to ${DJ_MAX} players. No Spotify or accounts needed, just turn the volume up.</p>
         ${s.err && code ? `<p class="error">${esc(s.err)}</p>` : ""}
         <button class="btn primary pass-btn" data-a="start"${cnt >= 3 ? "" : " disabled"}>${cnt >= 3 ? "🎧 Start round 1" : `Waiting for phones (${cnt}/3)`}</button>`;
     } else if (s.phase === "intro") {
-      main = `<div class="dj-round"><small>${esc(RD().name)}</small><b>${esc(RD().sub)}</b><p>📱 Check your phone: you've got 2 prompts and ${s.cfg.answer} seconds.</p></div>`;
+      main = `<div class="dj-round"><small>${esc(RD().name)}${s.battle ? " · 🥊 DJ Battles" : ""}</small><b>${esc(RD().sub)}</b><p>📱 Check your phone: ${s.battle ? `one prompt, battling ${s.prompts.length > 1 ? "2–3" : s.parts.length - 1} other DJs` : "you've got 2 prompts"}, and ${s.cfg.answer} seconds.</p></div>`;
       side = `<div class="dg-status">${roundChip()}</div><button class="btn primary" data-a="go">Go now →</button>${mini()}`;
     } else if (s.phase === "answer" || s.phase === "filling") {
       const done = s.parts.filter(doneAll).length;
       main = `<div class="dj-round small"><small>${esc(RD().name)} · ${esc(RD().sub)}</small><b>${s.phase === "filling" ? "Time's up! 🐌" : "Pick your songs!"}</b>
-          <p>${s.phase === "filling" ? "Handing out safety songs to the slowpokes…" : "Two prompts each, on your phone. Funny and original wins."}</p></div>
+          <p>${s.phase === "filling" ? "Handing out safety songs to the slowpokes…" : s.battle ? `${s.prompts.length} battles of ${s.prompts.length > 1 ? "3–4" : s.parts.length} DJs. Funny and original wins.` : "Two prompts each, on your phone. Funny and original wins."}</p></div>
         <div class="dj-clock"><b id="djClock">${s.phase === "filling" ? "0" : s.cfg.answer}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>
-        <div class="dj-roster big">${s.parts.map((x) => { const n = mine(x).filter(({ j, slot }) => s.prompts[j].songs[slot]).length; return `<span class="dj-who ${n === 2 ? "on" : ""}">${djAv(avOf(x), 30)}${esc(x)} ${n === 2 ? "✅" : n + "/2"}</span>`; }).join("")}</div>`;
+        <div class="dj-roster big${s.parts.length > 16 ? " many" : ""}">${s.parts.map((x) => { const m = mine(x), n = m.filter(({ j, slot }) => s.prompts[j].songs[slot]).length; return `<span class="dj-who ${n === m.length ? "on" : ""}">${djAv(avOf(x), 30)}${esc(x)} ${n === m.length ? "✅" : n + "/" + m.length}</span>`; }).join("")}</div>`;
       side = `<div class="dg-status">${roundChip()}<span class="chip">${done}/${s.parts.length} done</span></div>
         ${s.phase === "answer" ? `<button class="btn" data-a="endanswer">⏩ End the timer now</button>` : ""}${mini()}`;
     } else if (s.phase === "show" || s.phase === "vote" || s.phase === "reveal") {
       const pr = curPr();
-      main = `<div class="dj-theme"><small>${esc(RD().name)} · matchup ${s.mi + 1} of ${s.order.length}</small><b>${esc(pr.text)}</b></div>
-        <div class="dj-res">${songCard(0, s.phase)}${songCard(1, s.phase)}</div>`;
+      main = `<div class="dj-theme"><small>${esc(RD().name)} · ${word()} ${s.mi + 1} of ${s.order.length}</small><b>${esc(pr.text)}</b></div>
+        <div class="dj-res${s.perm.length > 2 ? " many" : ""}" style="--n:${s.perm.length}">${s.perm.map((_, k) => songCard(k, s.phase)).join("")}</div>`;
       if (s.phase === "show") {
         main += `<div class="dj-clock"><b id="djClock">${s.loading ? "…" : "0:" + String(s.cfg.clip).padStart(2, "0")}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div></div>`;
         side = `<div class="dg-status">${roundChip()}<span class="chip">▶ Song ${L(s.cur)}</span></div>
           ${s.err ? `<p class="error" style="text-align:left">${esc(s.err)}</p><button class="btn primary" data-a="retry">Try again</button>` : ""}
-          <button class="btn" data-a="skip"${s.loading ? " disabled" : ""}>⏭ ${s.cur === 0 ? "Skip to song B" : "Skip to the vote"}</button>${mini()}`;
+          <button class="btn" data-a="skip"${s.loading ? " disabled" : ""}>⏭ ${nextIdx() >= 0 ? "Skip to song " + L(nextIdx()) : "Skip to the vote"}</button>${mini()}`;
       } else if (s.phase === "vote") {
         const vs = voters(pr), n = vs.filter((x) => s.votes[x] != null).length;
         main += `<div class="dj-clock"><b id="djClock">${DJ_VOTE}</b><div class="ph-bar"><i id="djBar" style="width:100%"></i></div>
-          <p class="big-msg">Vote on your phones! 🗳️</p><div class="dj-votes">${vs.filter((x) => s.votes[x] != null).map((x) => `<i class="dj-who">${djAv(avOf(x), 22)}${esc(x)} ✓</i>`).join("")}</div></div>`;
+          <p class="big-msg">Vote on your phones! 🗳️</p><div class="dj-votes">${vs.filter((x) => s.votes[x] != null).map((x) => `<i class="dj-who">${djAv(avOf(x), 22)}${vs.length > 16 ? "" : esc(x) + " "}✓</i>`).join("")}</div></div>`;
         side = `<div class="dg-status">${roundChip()}<span class="chip">${n}/${vs.length} voted</span></div>
-          <p class="sub">The two DJs of this matchup can't vote.</p><button class="btn primary" data-a="reveal">Reveal now</button>${mini()}`;
+          <p class="sub">${s.battle ? `The DJs in this battle can't vote. Back the winner for 🎯 Called it! points (+${DJ_CALLED * RD().mult}).` : "The two DJs of this matchup can't vote."}</p><button class="btn primary" data-a="reveal">Reveal now</button>${mini()}`;
       } else {
         const r = s.res, last = s.mi === s.order.length - 1;
-        const verdict = r.win < 0 ? (r.missing[0] && r.missing[1] ? "Nobody picked a song. Moving on." : "It's a tie! Nobody drinks.")
-          : r.missing[1 - r.win] ? `${esc(r.authors[r.win])} wins by forfeit.`
-          : `${esc(r.authors[r.win])} takes it${r.lash ? " with a SONGLASH 💥" : ""}! ${esc(r.drink.name)} drinks ${sips(r.drink.n)}.`;
-        side = `<div class="fate"><small>Matchup ${s.mi + 1} of ${s.order.length}</small><p>${verdict}</p></div>
-          <button class="btn primary pass-btn" data-a="next">${last ? "🏆 Show the leaderboard" : "Next matchup →"}</button>${mini()}`;
+        const live = r.missing.filter((x) => !x).length, drinks = r.drinks.map((x) => `${esc(x.name)} drinks ${sips(x.n)}`).join(", ");
+        const called = r.callPts ? voters(pr).filter((x) => s.votes[x] === r.win).length : 0;
+        const verdict = live === 0 ? "Nobody picked a song. Moving on." : live === 1 ? `${esc(r.authors[r.win])} wins by forfeit.`
+          : `${r.win < 0 ? "It's a tie at the top!" : `${esc(r.authors[r.win])} takes it${r.lash ? " with a SONGLASH 💥" : ""}!`} ${drinks ? drinks + "." : "Nobody drinks."}`
+          + (called ? `<br><small>🎯 ${called} ${called === 1 ? "person" : "people"} called it: +${r.callPts}</small>` : "");
+        side = `<div class="fate"><small>${s.battle ? "Battle" : "Matchup"} ${s.mi + 1} of ${s.order.length}</small><p>${verdict}</p></div>
+          <button class="btn primary pass-btn" data-a="next">${last ? "🏆 Show the leaderboard" : `Next ${word()} →`}</button>${mini()}`;
       }
     } else if (s.phase === "board" || s.phase === "final") {
       const b = s.board, fin = s.phase === "final";
       main = `<div class="dj-round small"><small>${fin ? "Game over" : esc(RD().name) + " done"}</small><b>${fin ? (b.first ? `👑 ${esc(b.first)} wins!` : "It's a tie at the top!") : "Leaderboard"}</b></div>
-        <div class="dj-board">${b.rows.map((r, i) => `<div class="dj-brow" style="animation-delay:${i * 0.08}s"><span class="rk">${1 + b.rows.filter((x) => x.score > r.score).length}</span><span class="nm dj-who">${djAv(avOf(r.name), 46)}${r.score === b.rows[0].score && r.score ? "👑 " : ""}${esc(r.name)}</span>
+        <div class="dj-board${b.rows.length > 8 ? " many" : ""}">${boardRows(b.rows).map((r, i) => r === "gap" ? `<p class="dj-gap">· · · ${b.rows.length - 12} more · · ·</p>` : `<div class="dj-brow" style="animation-delay:${i * 0.08}s"><span class="rk">${1 + b.rows.filter((x) => x.score > r.score).length}</span><span class="nm dj-who">${djAv(avOf(r.name), b.rows.length > 8 ? 34 : 46)}${r.score === b.rows[0].score && r.score ? "👑 " : ""}${esc(r.name)}</span>
           ${r.delta ? `<em>+${r.delta}</em>` : ""}<b data-from="${r.score - r.delta}" data-to="${r.score}">${r.score - r.delta}</b></div>`).join("")}</div>`;
       side = `<div class="fate"><small>${fin ? "Final round" : "End of " + esc(RD().name)}</small>
           <p>${b.last.length ? `Last place: ${b.last.map(esc).join(" & ")} drink${b.last.length > 1 ? "" : "s"} 2.` : "All tied up. Nobody drinks."}</p>
@@ -6668,6 +6761,8 @@ function makeDJ() {
     return `<div class="dj-set">
       <div class="section"><p class="label">How long does each song play?</p><div class="options heat four">${DJ_CLIPS.map((o) => opt("clip", o, "s")).join("")}</div></div>
       <div class="section"><p class="label">Time to pick songs</p><div class="options heat three">${DJ_ANSWERS.map((o) => opt("ans", o, "s")).join("")}</div></div>
+      <div class="section"><div class="toggle"><div><strong>🥊 DJ Battles, for big groups</strong><span>Instead of 1-vs-1, 3–4 DJs share one prompt and everyone else votes. You get one prompt per round, so a round with 30 players takes about 10 minutes instead of 30. Back the winner for 🎯 <b>Called it!</b> points. Works best with 10-second songs.</span></div>
+        <button class="switch" role="switch" aria-checked="${c.battle}" data-a="battle"></button></div></div>
       <div class="section"><div class="toggle"><div><strong>Player names in prompts 😈</strong><span>About 1 in 3 prompts are about someone in the room, like "${esc(djFill(DJ_NAMED[0], all()[0] || "Luca"))}". Never about the two people answering it.</span></div>
         <button class="switch" role="switch" aria-checked="${c.names}" data-a="names"></button></div></div>
       <div class="section"><p class="label">Your own prompts · ${c.custom.length}</p>
@@ -6726,6 +6821,7 @@ function makeDJ() {
       if (a === "clip") { s.cfg.clip = +el.dataset.v; return save(); }
       if (a === "ans") { s.cfg.answer = +el.dataset.v; return save(); }
       if (a === "names") { s.cfg.names = !s.cfg.names; return save(); }
+      if (a === "battle") { s.cfg.battle = !s.cfg.battle; if (s.cfg.battle && s.cfg.clip > 10) s.cfg.clip = 10; return save(); }
       if (a === "addq") {
         const inp = $("#djCustIn"), q = inp ? inp.value.trim().replace(/\s+/g, " ").slice(0, 120) : "";
         if (!q) return inp && inp.focus();
@@ -6848,7 +6944,7 @@ function djpData(d) {
   if (d.t === "kicked" || d.t === "nametaken" || d.t === "badname" || d.t === "full") {
     const was = DJP.name;
     Object.assign(DJP, { name: "", joined: false, st: null, key: "", draft: was || DJP.draft });
-    DJP.err = d.t === "nametaken" ? `"${was}" is already taken. Pick another name.` : d.t === "full" ? "The game is full (16 players)."
+    DJP.err = d.t === "nametaken" ? `"${was}" is already taken. Pick another name.` : d.t === "full" ? `The game is full (${DJ_MAX} players).`
       : d.t === "badname" ? "Type a name first." : d.why === "host" ? "The host removed you. You can join again with another name." : "You joined from another device.";
     djpSave();
     return djpRender();
@@ -6904,45 +7000,46 @@ function djpRender() {
   else if (!DJP.joined || !st) h = center("🙌", "Joining…", "");
   else if (st.phase === "lobby") h = `<div class="center">${djAv(DJP.av, 150, "pop")}<p class="big-msg">You're in, ${es(DJP.name)}!</p><p class="sub">Look for yourself on the laptop. Waiting for the host to start.</p></div>`
     + `<button class="link" data-p="rename">✏️ Change my name or avatar</button>`;
-  else if (!st.inGame && st.phase !== "board" && st.phase !== "final") h = center("👀", "Round in progress", "You'll be in from the next round. Watch the laptop for now.");
-  else if (st.phase === "intro") h = center("🎧", es(st.round), es(st.sub) + "<br>Two prompts are coming your way…");
+  else if (!st.inGame && (st.phase === "intro" || st.phase === "answer" || st.phase === "filling")) h = center("👀", "Round in progress", "Everyone's picking songs right now. You'll get prompts next round, and you can vote on every matchup in this one!");
+  else if (st.phase === "intro") h = center(st.battle ? "🥊" : "🎧", es(st.round), es(st.sub) + (st.battle ? "<br>DJ Battle! One prompt is coming your way, and you're up against the other DJs in your battle…" : "<br>Two prompts are coming your way…"));
   else if (st.phase === "answer") {
     const mine = st.mine || [], k = DJP.edit != null ? DJP.edit : mine.findIndex((x) => !x.pick);
     if (k >= 0 && mine[k]) {
-      h = `${clockEl}${prompt(`Prompt ${k + 1} of ${mine.length}`, mine[k].text)}
+      h = `${clockEl}${prompt(st.battle ? `🥊 Your battle · ${es(mine[k].djs)} DJs, 1 prompt` : `Prompt ${k + 1} of ${mine.length}`, mine[k].text)}
         <div class="player-row"><input type="text" id="djpQ" placeholder="Search a song or artist" value="${es(DJP.q)}" autocomplete="off" spellcheck="false" enterkeyhint="search"><button class="btn primary" data-p="search">${DJP.searching ? "…" : "🔍"}</button></div>
         ${DJP.err ? `<p class="error" style="text-align:left">${es(DJP.err)}</p>` : ""}
         ${DJP.found ? `<div class="dj-results">${DJP.found.map((t, i) => djTrackBtn(t, `data-p="pick" data-k="${k}" data-i="${i}"`)).join("")}</div>` : `<p class="note">Funny and original beats "good".</p>`}
         ${DJP.edit != null ? `<button class="btn ghost" data-p="noedit">Keep my old song</button>` : ""}`;
     } else {
-      h = `${clockEl}${center("✅", "Both songs locked in!", `${es(st.done)}/${es(st.total)} players are done.`)}
+      h = `${clockEl}${center("✅", mine.length === 1 ? "Song locked in!" : "Both songs locked in!", `${es(st.done)}/${es(st.total)} players are done.`)}
         ${mine.map((x, i) => `<div class="section"><p class="label">${es(x.text)}</p>${djTrackBtn(x.pick, "disabled", true)}<button class="link" data-p="edit" data-k="${i}">Change</button></div>`).join("")}`;
     }
   } else if (st.phase === "filling") h = center("🐌", "Time's up!", "Too slow? You get a safety song. Eyes on the laptop!");
   else if (st.m && (st.phase === "show" || st.phase === "vote" || st.phase === "reveal")) {
     const m = st.m, songs = m.songs || [];
-    const head = prompt(`${es(st.round)} · matchup ${es(m.n)} of ${es(m.of)}`, m.prompt);
+    const wd = st.battle ? "battle" : "matchup", head = prompt(`${es(st.round)} · ${wd} ${es(m.n)} of ${es(m.of)}`, m.prompt);
     if (st.phase === "show") {
       const t = songs[m.cur];
-      h = `${head}${clockEl}<p class="big-msg center">▶ Song ${m.cur ? "B" : "A"}</p>${t ? djTrackBtn(t, "disabled", true) : ""}
-        <p class="sub center">${m.author === m.cur ? "🤫 That's your song! Poker face." : m.author >= 0 ? "This is your matchup. Your rival's song is playing." : "Listen up. You vote after both songs."}</p>`;
-    } else if (st.phase === "vote" && m.author >= 0) h = `${head}${clockEl}${center("🤞", "Your matchup!", "You can't vote on your own matchup. Fingers crossed.")}`;
+      h = `${head}${clockEl}<p class="big-msg center">▶ Song ${"ABCDEF"[m.cur]}${songs.length > 2 ? ` of ${songs.length}` : ""}</p>${t ? djTrackBtn(t, "disabled", true) : ""}
+        <p class="sub center">${m.author === m.cur ? "🤫 That's your song! Poker face." : m.author >= 0 ? `This is your ${wd}. A rival's song is playing.` : `Listen up. You vote after ${songs.length > 2 ? "all songs" : "both songs"}.`}</p>`;
+    } else if (st.phase === "vote" && m.author >= 0) h = `${head}${clockEl}${center("🤞", `Your ${wd}!`, `You can't vote on your own ${wd}. Fingers crossed.`)}`;
     else if (st.phase === "vote") {
-      h = `${head}${clockEl}<div class="dj-abs">${[0, 1].map((v) => { const t = songs[v] || {}; return `<button class="dj-ab ${v ? "b" : "a"}${m.vote === v ? " on" : m.vote != null ? " dim" : ""}" data-p="vote" data-v="${v}"><big>${v ? "B" : "A"}</big><em>${es(t.name)}</em><small>${es(t.artist)}</small></button>`; }).join("")}</div>
-        <p class="sub center">${m.vote != null ? "Vote locked in. You can change it until the reveal." : "Funniest or most original? Tap to vote."}</p>`;
+      h = `${head}${clockEl}<div class="dj-abs${songs.length > 2 ? " many" : ""}">${songs.map((t0, v) => { const t = t0 || {}, gone = (m.missing || [])[v]; return `<button class="dj-ab" style="background:${DJ_ABC[v]}"${gone ? " disabled" : ""} ${m.vote === v ? 'data-on="1"' : ""} data-p="vote" data-v="${v}"><big>${"ABCDEF"[v]}</big><em>${gone ? "No song" : es(t.name)}</em><small>${es(t.artist)}</small></button>`; }).join("")}</div>
+        <p class="sub center">${m.vote != null ? "Vote locked in. You can change it until the reveal." : `Funniest or most original? Tap to vote.${st.battle ? " Back the winner for 🎯 Called it! points." : ""}`}</p>`;
     } else if (m.res) {
       const r = m.res, me = DJP.name, mi = r.authors.indexOf(me);
-      const line = mi >= 0 ? (r.win === mi ? `You won! +${r.pts[mi]} points${r.lash ? " · SONGLASH 💥" : ""}` : r.drink && r.drink.name === me ? `You lost. +${r.pts[mi]} points, and drink ${sips(r.drink.n)} 🍺` : `+${r.pts[mi]} points`)
-        : m.vote != null ? (r.win === m.vote ? "You backed the winner 🎉" : "Your pick lost.") : "";
+      const myDrink = (r.drinks || []).find((x) => x.name === me);
+      const line = mi >= 0 ? (r.win === mi ? `You won! +${r.pts[mi]} points${r.lash ? " · SONGLASH 💥" : ""}` : myDrink ? `${st.battle ? "Last place" : "You lost"}. +${r.pts[mi]} points, and drink ${sips(myDrink.n)} 🍺` : `+${r.pts[mi]} points`)
+        : m.vote != null ? (r.win === m.vote ? (r.callPts ? `🎯 Called it! +${r.callPts} points` : "You backed the winner 🎉") : "Your pick didn't win.") : "";
       h = `${head}${center(r.win < 0 ? "🤝" : r.lash ? "💥" : "🏆", r.win < 0 ? "Tie!" : `${es(r.authors[r.win])} wins!`, es(line))}
-        ${[0, 1].map((k) => songs[k] ? `<div class="np"${r.win === k ? ' style="background:rgba(255,204,51,.18);border-color:#ffcc33"' : ""}>${djSafeImg(songs[k].art) ? `<img src="${es(djSafeImg(songs[k].art))}" alt="">` : `<span class="np-art">🎵</span>`}<div><b>${r.win === k ? "👑 " : ""}${es(songs[k].name)}</b><span>${djAv((st.avs || {})[r.authors[k]], 18)} ${es(r.authors[k])} · ${es(r.v[k])} vote${r.v[k] === 1 ? "" : "s"} · +${es(r.pts[k])}</span></div></div>` : "").join("")}`;
+        ${songs.map((_, k) => songs[k] ? `<div class="np"${r.win === k ? ' style="background:rgba(255,204,51,.18);border-color:#ffcc33"' : ""}>${djSafeImg(songs[k].art) ? `<img src="${es(djSafeImg(songs[k].art))}" alt="">` : `<span class="np-art">🎵</span>`}<div><b>${r.win === k ? "👑 " : ""}${es(songs[k].name)}</b><span>${djAv((st.avs || {})[r.authors[k]], 18)} ${es(r.authors[k])} · ${es(r.v[k])} vote${r.v[k] === 1 ? "" : "s"} · +${es(r.pts[k])}</span></div></div>` : "").join("")}`;
     } else h = center("🎧", "Hang tight…", "");
   } else if ((st.phase === "board" || st.phase === "final") && st.board) {
     const rows = st.board.rows || [], r = rows.find((x) => x.name === DJP.name), rk = (x) => 1 + rows.filter((y) => y.score > x.score).length;
     const i = r ? rk(r) - 1 : -1, champ = st.board.first;
     h = center(st.phase === "final" ? (champ === DJP.name ? "👑" : "🏁") : "📊", st.phase === "final" ? (champ === DJP.name ? "You won DJ Duel!" : champ ? `${es(champ)} wins!` : "It's a tie at the top!") : "Leaderboard",
       r ? `You're <b>#${i + 1}</b> with ${es(r.score)} points${r.delta ? ` (+${es(r.delta)} this round)` : ""}.${(st.board.last || []).includes(DJP.name) ? " Last place: drink 2 🍺" : ""}` : "")
-      + `<div class="tally">${rows.map((x) => `<div><span class="dj-who">${rk(x)}. ${djAv((st.avs || {})[x.name], 26)}${es(x.name)}</span><b>${es(x.score)}</b></div>`).join("")}</div>`;
+      + `<div class="tally">${rows.map((x) => `<div${x.name === DJP.name ? ' class="me"' : ""}><span class="dj-who">${rk(x)}. ${djAv((st.avs || {})[x.name], 26)}${es(x.name)}</span><b>${es(x.score)}</b></div>`).join("")}</div>`;
   } else h = center("🎧", "Hang tight…", "");
   $("#djpBody").innerHTML = h;
   const q = $("#djpQ");
